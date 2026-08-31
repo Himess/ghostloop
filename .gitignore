@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Next.js and build output
+.next/
+out/
+dist/
+coverage/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Tool caches
+.turbo/
+.vercel/
+target/
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# Local-only position registry and test artifacts
+.ghostloop/
+artifacts/
