@@ -12,8 +12,14 @@ type AbiInterface = {
   items: AbiFunction[];
 };
 
+type AbiEnum = {
+  type: "enum";
+  name: string;
+  variants: Array<{ name: string; type: string }>;
+};
+
 type ContractClass = {
-  abi: Array<AbiInterface | { type: string; name?: string }>;
+  abi: Array<AbiInterface | AbiEnum | { type: string; name?: string }>;
 };
 
 function isPositionInterface(
@@ -64,6 +70,38 @@ async function verifyInterface(
   return actual.length;
 }
 
+async function verifyEnumVariants(
+  artifactName: string,
+  enumSuffix: string,
+  expectedNames: string[],
+) {
+  const artifactPath = resolve("contracts/target/dev", artifactName);
+  const contractClass = JSON.parse(
+    await readFile(artifactPath, "utf8"),
+  ) as ContractClass;
+  const abiEnum = contractClass.abi.find(
+    (item): item is AbiEnum =>
+      item.type === "enum" &&
+      "variants" in item &&
+      typeof item.name === "string" &&
+      item.name.endsWith(enumSuffix),
+  );
+
+  if (!abiEnum) {
+    throw new Error(`${enumSuffix} was not found in ${artifactName}`);
+  }
+
+  const actual = abiEnum.variants.map((variant) => variant.name).sort();
+  const expected = [...expectedNames].sort();
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(
+      `${enumSuffix} drifted. Expected ${expected.join(", ")}; received ${actual.join(", ")}`,
+    );
+  }
+
+  return actual.length;
+}
+
 const positionEntryPoints = await verifyInterface(
   "ghostloop_contracts_GhostPosition.contract_class.json",
   "::IGhostPosition",
@@ -88,7 +126,12 @@ const anonymizerEntryPoints = await verifyInterface(
     "privacy_pool",
   ],
 );
+const anonymizerOperations = await verifyEnumVariants(
+  "ghostloop_contracts_GhostLoopAnonymizer.contract_class.json",
+  "::GhostLoopOperation",
+  ["CreateAndFund", "Borrow", "Repay", "CloseBorrow"],
+);
 
 console.log(
-  `Contract ABIs are minimal: ${positionEntryPoints} position and ${anonymizerEntryPoints} anonymizer entry points, with no arbitrary-call surface.`,
+  `Contract ABIs are minimal: ${positionEntryPoints} position entry points, ${anonymizerEntryPoints} anonymizer entry points, and ${anonymizerOperations} closed anonymizer operations, with no arbitrary-call surface.`,
 );

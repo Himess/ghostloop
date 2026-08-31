@@ -151,12 +151,30 @@ from assumptions. Times are recorded in UTC.
   transaction belongs to another activity and is deliberately not placed in
   GhostLoop's `strk20.json`.
 
+## 2026-09-01 — Ordinary Wallet API helper settlement passes locally
+
+- **Time:** 2026-09-01T00:26+03:00
+- **Source:** GhostLoop Cairo contracts on Scarb/Cairo `2.18.0` and Starknet
+  Foundry `0.63.0`, executed on the isolated Survivors Linux toolchain.
+- **Finding:** `GhostLoopAnonymizer` now has a closed
+  `CreateAndFund | Borrow | Repay | CloseBorrow` dispatch. Stateful token and
+  position mocks verified exact input forwarding, balance-delta settlement,
+  pool-only approvals, optional close refund notes, zero output rejection,
+  `u128` overflow rejection, and reported-versus-measured output mismatch.
+  All 24 contract tests passed and the production ABI remained limited to 7
+  position and 5 anonymizer entry points.
+- **Confidence:** High for local contract invariants; no claim about live Vesu
+  behavior or Wallet API calldata compatibility yet.
+- **Impact:** Local STRK20 settlement accounting is implemented. The next hard
+  gates are a real Wallet API `strk20PrepareInvoke(..., true)` dry-run and the
+  Vesu Borrow/Repay/Close Mainnet-fork lifecycle.
+
 ## Research queue
 
-- Resolve the fallback architecture decision before writing position ownership
-  contracts.
-- Build deterministic Mainnet read scripts for addresses, ABIs, pair config,
-  Vesu position accounting, and Multiply route semantics.
+- Serialize each helper enum variant into Wallet API actions and execute a real
+  `strk20PrepareInvoke(..., true)` dry-run with a supporting wallet.
 - Build Borrow and Multiply/unwind lifecycle proofs on a Mainnet fork.
-- Execute the Wallet API probe manually if a newer Ready release advertises
-  Shadow Account support.
+- Verify canonical Multiply V2 and Ekubo calldata against the pinned deployment.
+- Implement encrypted client-side capability-key storage and recovery warnings.
+- Execute the native Shadow Account Wallet API probe if a newer Ready release
+  advertises support.

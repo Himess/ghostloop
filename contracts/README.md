@@ -18,8 +18,19 @@ Current checkpoint:
 - capability-signed creation binding chain, predicted position, amount, nonce,
   and deadline;
 - explicit Vesu Prime Borrow, Repay, and CloseBorrow entry points;
-- exact empty `OpenNoteDeposit` return for funding-only `privacy_invoke`;
-- no Multiply or anonymizer Borrow/Repay/Close dispatch yet.
+- closed `CreateAndFund | Borrow | Repay | CloseBorrow` anonymizer operation
+  enum, with no arbitrary-call variant;
+- exact input forwarding verified by helper balance changes;
+- Borrow credits one measured, non-zero USDC output and approves only the
+  pinned pool;
+- Repay forwards exact USDC and returns an empty deposit span;
+- CloseBorrow credits measured ETH and an optional measured USDC refund to
+  distinct open notes;
+- explicit rejection of zero output, negative delta, `u128` note overflow,
+  position-reported/output-delta mismatch, missing notes, and unused refund
+  notes;
+- 24 passing Linux contract tests;
+- no Multiply dispatch yet.
 
 Do not deploy until all gates in [`../docs/SECURITY.md`](../docs/SECURITY.md)
 pass.

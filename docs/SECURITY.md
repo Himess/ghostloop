@@ -62,7 +62,18 @@ No value-bearing Mainnet deployment until:
 - Creation authorization binds the actual chain ID, predicted position address,
   create-and-fund action, full amount/key/salt parameters, nonce zero, and a
   deadline.
-- The funding-only operation returns an exact empty `Span<OpenNoteDeposit>`;
-  later settlement operations must approve the pinned pool and return measured
-  non-zero output deltas.
+- `privacy_invoke` dispatches only `CreateAndFund`, `Borrow`, `Repay`,
+  and `CloseBorrow`; there is no raw target, selector, or calldata field.
+- Input forwarding is accepted only when the helper's measured token balance
+  decreases by the exact declared amount.
+- Funding and Repay return an exact empty `Span<OpenNoteDeposit>`.
+- Borrow and CloseBorrow ignore untrusted protocol return values for
+  settlement, use positive helper balance deltas, require them to fit `u128`,
+  approve only the pinned pool, and then return exact deposit instructions.
+- CloseBorrow requires one ETH note and requires a second USDC note if and only
+  if a non-zero debt refund was actually received.
 - The helper has no arbitrary-call entry point. Any ABI expansion fails CI.
+
+The local stateful settlement suite covers these invariants, but it is not a
+substitute for the required Vesu Mainnet-fork lifecycle test or an independent
+audit.

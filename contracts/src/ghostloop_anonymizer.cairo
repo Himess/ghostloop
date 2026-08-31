@@ -9,6 +9,42 @@ pub struct CreateAndFundInput {
     pub authorization: Authorization,
 }
 
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
+pub struct BorrowInput {
+    pub capability_public_key: felt252,
+    pub position_salt: felt252,
+    pub debt_amount: u256,
+    pub minimum_borrowed: u256,
+    pub note_id: felt252,
+    pub authorization: Authorization,
+}
+
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
+pub struct RepayInput {
+    pub capability_public_key: felt252,
+    pub position_salt: felt252,
+    pub authorization: Authorization,
+}
+
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
+pub struct CloseBorrowInput {
+    pub capability_public_key: felt252,
+    pub position_salt: felt252,
+    pub collateral_note_id: felt252,
+    /// Must be zero when no USDC refund is expected. A non-zero refund requires
+    /// a second open note id so no pool-created note is left unused.
+    pub debt_refund_note_id: felt252,
+    pub authorization: Authorization,
+}
+
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
+pub enum GhostLoopOperation {
+    CreateAndFund: CreateAndFundInput,
+    Borrow: BorrowInput,
+    Repay: RepayInput,
+    CloseBorrow: CloseBorrowInput,
+}
+
 #[starknet::interface]
 pub trait IGhostLoopAnonymizer<TContractState> {
     /// STRK20 invokes this selector. The first three fields retain the documented
@@ -18,7 +54,7 @@ pub trait IGhostLoopAnonymizer<TContractState> {
         in_token: ContractAddress,
         out_token: ContractAddress,
         amount: u256,
-        input: CreateAndFundInput,
+        operation: GhostLoopOperation,
     ) -> Span<OpenNoteDeposit>;
     fn predict_position(
         self: @TContractState, capability_public_key: felt252, position_salt: felt252,
@@ -36,6 +72,7 @@ pub mod errors {
     pub const ZERO_PUBLIC_KEY: felt252 = 'ZERO_PUBLIC_KEY';
     pub const ZERO_AMOUNT: felt252 = 'ZERO_AMOUNT';
     pub const INVALID_TOKEN: felt252 = 'INVALID_TOKEN';
+    pub const TOKENS_EQUAL: felt252 = 'TOKENS_EQUAL';
     pub const UNAUTHORIZED_CALLER: felt252 = 'UNAUTHORIZED_CALLER';
     pub const INVALID_NONCE: felt252 = 'INVALID_NONCE';
     pub const AUTHORIZATION_EXPIRED: felt252 = 'AUTH_EXPIRED';
@@ -44,6 +81,15 @@ pub mod errors {
     pub const ADDRESS_MISMATCH: felt252 = 'ADDRESS_MISMATCH';
     pub const INSUFFICIENT_FUNDS: felt252 = 'INSUFFICIENT_FUNDS';
     pub const TOKEN_TRANSFER_FAILED: felt252 = 'TOKEN_TRANSFER_FAILED';
+    pub const TOKEN_APPROVE_FAILED: felt252 = 'TOKEN_APPROVE_FAILED';
+    pub const POSITION_NOT_FOUND: felt252 = 'POSITION_NOT_FOUND';
+    pub const INPUT_TRANSFER_MISMATCH: felt252 = 'INPUT_XFER_MISMATCH';
+    pub const NEGATIVE_OUTPUT: felt252 = 'NEGATIVE_OUTPUT';
+    pub const OUTPUT_MISMATCH: felt252 = 'OUTPUT_MISMATCH';
+    pub const OUTPUT_OVERFLOW: felt252 = 'OUTPUT_OVERFLOW';
+    pub const ZERO_OUT_AMOUNT: felt252 = 'ZERO_OUT_AMOUNT';
+    pub const NOTE_ID_REQUIRED: felt252 = 'NOTE_ID_REQUIRED';
+    pub const UNEXPECTED_NOTE_ID: felt252 = 'UNEXPECTED_NOTE_ID';
 }
 
 #[starknet::contract]
@@ -65,7 +111,11 @@ pub mod GhostLoopAnonymizer {
     use crate::authorization::{
         ACTION_CREATE_AND_FUND, hash_authorization, hash_create_and_fund_parameters,
     };
-    use crate::ghostloop_anonymizer::{CreateAndFundInput, IGhostLoopAnonymizer, errors};
+    use crate::ghost_position::{IGhostPositionDispatcher, IGhostPositionDispatcherTrait};
+    use crate::ghostloop_anonymizer::{
+        BorrowInput, CloseBorrowInput, CreateAndFundInput, GhostLoopOperation, IGhostLoopAnonymizer,
+        RepayInput, errors,
+    };
     use crate::interfaces::{IERC20Dispatcher, IERC20DispatcherTrait, OpenNoteDeposit};
 
     #[storage]
@@ -109,6 +159,7 @@ pub mod GhostLoopAnonymizer {
         assert(usdc.is_non_zero(), errors::ZERO_ADDRESS);
         assert(vesu_pool.is_non_zero(), errors::ZERO_ADDRESS);
         assert(vesu_multiply.is_non_zero(), errors::ZERO_ADDRESS);
+        assert(eth != usdc, errors::TOKENS_EQUAL);
         let class_hash_felt: felt252 = position_class_hash.into();
         assert(class_hash_felt.is_non_zero(), errors::ZERO_CLASS_HASH);
 
@@ -169,19 +220,63 @@ pub mod GhostLoopAnonymizer {
                 errors::INVALID_SIGNATURE,
             );
         }
-    }
 
-    #[abi(embed_v0)]
-    impl GhostLoopAnonymizerImpl of IGhostLoopAnonymizer<ContractState> {
-        fn privacy_invoke(
+        fn position_or_revert(
+            self: @ContractState, capability_public_key: felt252, position_salt: felt252,
+        ) -> ContractAddress {
+            assert(capability_public_key.is_non_zero(), errors::ZERO_PUBLIC_KEY);
+            let position = self
+                .positions
+                .read(self.position_key(capability_public_key, position_salt));
+            assert(position.is_non_zero(), errors::POSITION_NOT_FOUND);
+            position
+        }
+
+        fn transfer_exact(
+            self: @ContractState, token: ContractAddress, recipient: ContractAddress, amount: u256,
+        ) {
+            let self_address = get_contract_address();
+            let erc20 = IERC20Dispatcher { contract_address: token };
+            let balance_before = erc20.balance_of(self_address);
+            assert(balance_before >= amount, errors::INSUFFICIENT_FUNDS);
+            assert(erc20.transfer(recipient, amount), errors::TOKEN_TRANSFER_FAILED);
+            let balance_after = erc20.balance_of(self_address);
+            assert(
+                balance_before >= balance_after && balance_before - balance_after == amount,
+                errors::INPUT_TRANSFER_MISMATCH,
+            );
+        }
+
+        fn measured_delta(
+            self: @ContractState, token: ContractAddress, balance_before: u256,
+        ) -> u256 {
+            let balance_after = IERC20Dispatcher { contract_address: token }
+                .balance_of(get_contract_address());
+            assert(balance_after >= balance_before, errors::NEGATIVE_OUTPUT);
+            balance_after - balance_before
+        }
+
+        fn checked_note_amount(self: @ContractState, amount: u256) -> u128 {
+            let note_amount: u128 = amount.try_into().expect(errors::OUTPUT_OVERFLOW);
+            assert(note_amount.is_non_zero(), errors::ZERO_OUT_AMOUNT);
+            note_amount
+        }
+
+        fn approve_pool(self: @ContractState, token: ContractAddress, amount: u256) {
+            assert(
+                IERC20Dispatcher { contract_address: token }
+                    .approve(self.privacy_pool.read(), amount),
+                errors::TOKEN_APPROVE_FAILED,
+            );
+        }
+
+        fn create_and_fund(
             ref self: ContractState,
             in_token: ContractAddress,
             out_token: ContractAddress,
             amount: u256,
             input: CreateAndFundInput,
         ) -> Span<OpenNoteDeposit> {
-            assert(get_caller_address() == self.privacy_pool.read(), errors::UNAUTHORIZED_CALLER);
-            assert(amount.is_non_zero(), errors::ZERO_AMOUNT);
             assert(input.capability_public_key.is_non_zero(), errors::ZERO_PUBLIC_KEY);
             let eth = self.eth.read();
             assert(in_token == eth && out_token == eth, errors::INVALID_TOKEN);
@@ -191,9 +286,6 @@ pub mod GhostLoopAnonymizer {
             let predicted = self.predict_position(input.capability_public_key, input.position_salt);
             self.assert_creation_authorization(predicted, amount, input);
 
-            let self_address = get_contract_address();
-            let eth_token = IERC20Dispatcher { contract_address: eth };
-            assert(eth_token.balance_of(self_address) >= amount, errors::INSUFFICIENT_FUNDS);
             let constructor_calldata = self.constructor_calldata(input.capability_public_key);
             let (position, _) = deploy_syscall(
                 class_hash: self.position_class_hash.read(),
@@ -203,7 +295,7 @@ pub mod GhostLoopAnonymizer {
             )
                 .unwrap_syscall();
             assert(position == predicted, errors::ADDRESS_MISMATCH);
-            assert(eth_token.transfer(position, amount), errors::TOKEN_TRANSFER_FAILED);
+            self.transfer_exact(eth, position, amount);
 
             self.positions.write(key, position);
             self
@@ -216,6 +308,138 @@ pub mod GhostLoopAnonymizer {
                     },
                 );
             array![].span()
+        }
+
+        fn borrow(
+            ref self: ContractState,
+            in_token: ContractAddress,
+            out_token: ContractAddress,
+            collateral_amount: u256,
+            input: BorrowInput,
+        ) -> Span<OpenNoteDeposit> {
+            let eth = self.eth.read();
+            let usdc = self.usdc.read();
+            assert(in_token == eth && out_token == usdc, errors::INVALID_TOKEN);
+            assert(input.note_id.is_non_zero(), errors::NOTE_ID_REQUIRED);
+            let position = self
+                .position_or_revert(input.capability_public_key, input.position_salt);
+
+            self.transfer_exact(eth, position, collateral_amount);
+            let balance_before = IERC20Dispatcher { contract_address: usdc }
+                .balance_of(get_contract_address());
+            let reported = IGhostPositionDispatcher { contract_address: position }
+                .borrow(
+                    collateral_amount,
+                    input.debt_amount,
+                    input.minimum_borrowed,
+                    input.authorization,
+                );
+            let received = self.measured_delta(usdc, balance_before);
+            assert(received == reported, errors::OUTPUT_MISMATCH);
+            let note_amount = self.checked_note_amount(received);
+            self.approve_pool(usdc, received);
+
+            array![OpenNoteDeposit { note_id: input.note_id, token: usdc, amount: note_amount }]
+                .span()
+        }
+
+        fn repay(
+            ref self: ContractState,
+            in_token: ContractAddress,
+            out_token: ContractAddress,
+            repay_amount: u256,
+            input: RepayInput,
+        ) -> Span<OpenNoteDeposit> {
+            let usdc = self.usdc.read();
+            assert(in_token == usdc && out_token == usdc, errors::INVALID_TOKEN);
+            let position = self
+                .position_or_revert(input.capability_public_key, input.position_salt);
+            self.transfer_exact(usdc, position, repay_amount);
+            IGhostPositionDispatcher { contract_address: position }
+                .repay(repay_amount, input.authorization);
+            array![].span()
+        }
+
+        fn close_borrow(
+            ref self: ContractState,
+            in_token: ContractAddress,
+            out_token: ContractAddress,
+            maximum_debt_input: u256,
+            input: CloseBorrowInput,
+        ) -> Span<OpenNoteDeposit> {
+            let eth = self.eth.read();
+            let usdc = self.usdc.read();
+            assert(in_token == usdc && out_token == eth, errors::INVALID_TOKEN);
+            assert(input.collateral_note_id.is_non_zero(), errors::NOTE_ID_REQUIRED);
+            let position = self
+                .position_or_revert(input.capability_public_key, input.position_salt);
+
+            self.transfer_exact(usdc, position, maximum_debt_input);
+            let self_address = get_contract_address();
+            let eth_before = IERC20Dispatcher { contract_address: eth }.balance_of(self_address);
+            let usdc_before = IERC20Dispatcher { contract_address: usdc }.balance_of(self_address);
+            let (reported_collateral, reported_refund) = IGhostPositionDispatcher {
+                contract_address: position,
+            }
+                .close_borrow(maximum_debt_input, input.authorization);
+            let collateral_received = self.measured_delta(eth, eth_before);
+            let refund_received = self.measured_delta(usdc, usdc_before);
+            assert(
+                collateral_received == reported_collateral && refund_received == reported_refund,
+                errors::OUTPUT_MISMATCH,
+            );
+
+            let collateral_note_amount = self.checked_note_amount(collateral_received);
+            self.approve_pool(eth, collateral_received);
+            let mut deposits = array![
+                OpenNoteDeposit {
+                    note_id: input.collateral_note_id, token: eth, amount: collateral_note_amount,
+                },
+            ];
+            if refund_received.is_non_zero() {
+                assert(input.debt_refund_note_id.is_non_zero(), errors::NOTE_ID_REQUIRED);
+                let refund_note_amount = self.checked_note_amount(refund_received);
+                self.approve_pool(usdc, refund_received);
+                deposits
+                    .append(
+                        OpenNoteDeposit {
+                            note_id: input.debt_refund_note_id,
+                            token: usdc,
+                            amount: refund_note_amount,
+                        },
+                    );
+            } else {
+                assert(input.debt_refund_note_id == 0, errors::UNEXPECTED_NOTE_ID);
+            }
+            deposits.span()
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl GhostLoopAnonymizerImpl of IGhostLoopAnonymizer<ContractState> {
+        fn privacy_invoke(
+            ref self: ContractState,
+            in_token: ContractAddress,
+            out_token: ContractAddress,
+            amount: u256,
+            operation: GhostLoopOperation,
+        ) -> Span<OpenNoteDeposit> {
+            assert(get_caller_address() == self.privacy_pool.read(), errors::UNAUTHORIZED_CALLER);
+            assert(amount.is_non_zero(), errors::ZERO_AMOUNT);
+            match operation {
+                GhostLoopOperation::CreateAndFund(input) => {
+                    self.create_and_fund(in_token, out_token, amount, input)
+                },
+                GhostLoopOperation::Borrow(input) => {
+                    self.borrow(in_token, out_token, amount, input)
+                },
+                GhostLoopOperation::Repay(input) => {
+                    self.repay(in_token, out_token, amount, input)
+                },
+                GhostLoopOperation::CloseBorrow(input) => {
+                    self.close_borrow(in_token, out_token, amount, input)
+                },
+            }
         }
 
         fn predict_position(
