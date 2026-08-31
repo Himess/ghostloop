@@ -1,0 +1,26 @@
+[package]
+name = "ghostloop_contracts"
+version = "0.1.0"
+edition = "2024_07"
+license = "MIT"
+
+[dependencies]
+starknet = "2.18.0"
+alexandria_math = { git = "https://github.com/keep-starknet-strange/alexandria.git", rev = "c804e98" }
+
+[dev-dependencies]
+snforge_std = "0.63.0"
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[scripts]
+test = "snforge test"
+
+[tool.fmt]
+max-line-length = 100
+sort-module-level-items = true
+
+[tool.snforge]
+exit_first = true

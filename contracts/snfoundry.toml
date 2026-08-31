@@ -1,0 +1,2 @@
+[sncast.mainnet]
+url = "$STARKNET_RPC_URL"

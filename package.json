@@ -10,6 +10,7 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
+    "verify:contract-abi": "tsx scripts/verify-contract-abi.ts",
     "verify:addresses": "tsx scripts/verify-addresses.ts",
     "verify:tx": "tsx scripts/verify-mainnet-tx.ts",
     "evidence": "tsx scripts/export-mainnet-evidence.ts"

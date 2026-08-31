@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+
+  cairo:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v7
+      - uses: software-mansion/setup-scarb@v1.6.2
+        with:
+          scarb-version: 2.18.0
+          scarb-lock: contracts/Scarb.lock
+      - uses: foundry-rs/setup-snfoundry@v6.0.0
+        with:
+          starknet-foundry-version: 0.63.0
+      - run: scarb fmt --check
+      - run: scarb build
+      - run: snforge test
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+        working-directory: .
+      - run: npm run verify:contract-abi
+        working-directory: .
