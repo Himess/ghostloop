@@ -10,8 +10,9 @@ STRK20 provides private balances and unlinkable execution identities. Vesu
 provides lending and risk management. Ekubo provides swap liquidity for
 Multiply and unwind flows.
 
-> Status: architecture validation in progress. No deployment, demo URL,
-> contract address, or transaction hash is claimed yet.
+> Status: Option B architecture approved; authorization and fork proofs are in
+> progress. No deployment, demo URL, contract address, or transaction hash is
+> claimed yet.
 
 ## Product flows
 
@@ -38,9 +39,8 @@ The first milestone is evidence, not UI polish:
    dapp Wallet API support is not currently shipped; see the decision request.
 2. ~~Verify live STRK20 and Vesu ETH/USDC contracts and configuration.~~
 3. ~~Verify whether a canonical Vesu Multiply deployment exists.~~
-4. Prove borrow, Multiply, and full unwind on a Mainnet fork.
-5. Resolve Architecture A versus the documented fallback before implementing
-   position ownership.
+4. Implement the minimal signed GhostPosition authorization boundary.
+5. Prove borrow, Multiply, and full unwind on a Mainnet fork.
 
 Research is recorded in [docs/RESEARCH_LOG.md](docs/RESEARCH_LOG.md), and
 architectural decisions in [docs/DECISIONS.md](docs/DECISIONS.md).

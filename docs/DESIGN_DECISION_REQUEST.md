@@ -1,5 +1,8 @@
 # GhostLoop Design Decision Request
 
+> **Resolved 2026-08-31:** Semih approved Option B with a mandatory
+> `PositionExecutor` migration boundary and minimal allowlisted contracts.
+
 ## Decision
 Decide whether GhostLoop waits for native Wallet API Shadow Accounts or implements a per-position GhostPosition contract controlled through ordinary STRK20 `privacy_invoke`.
 

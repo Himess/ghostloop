@@ -2,8 +2,8 @@
 
 ## Status
 
-The architecture is not locked. Architecture A is preferred but must pass a
-real current-wallet capability test on Starknet Mainnet.
+Option B is approved as a temporary, replaceable compatibility layer. Native
+STRK20 Shadow Accounts remain the preferred long-term execution identity.
 
 ## Preferred Architecture A
 
@@ -49,26 +49,77 @@ Shadow Account
   → collect ETH into an STRK20 note
 ```
 
-## Architecture gate
+## Current Architecture B
 
-Architecture A is viable only if the current privacy-enabled Mainnet wallet can
-actually execute the Shadow Account action. Specification presence and version
-strings are insufficient; the implementation must be feature-detected and
-exercised.
+```text
+GhostLoop product flows
+  → PositionExecutor
+  → GhostPositionExecutor
+  → STRK20 Wallet API ordinary privacy_invoke
+  → GhostLoopAnonymizer
+  → one GhostPosition per position
+  → Vesu Prime / canonical Vesu Multiply V2 / Ekubo
+```
 
-## Fallback Architecture B
+The execution boundary exposes only:
 
-A custom GhostLoop anonymizer and per-position contract will be considered only
-if Architecture A is proven unavailable or unusable. That fallback introduces
-new authentication, replay-protection, custody, audit, and deployment risks and
-requires an explicit design decision before implementation.
+```text
+createPosition  fundPosition  borrow  repay  closeBorrow
+multiply        unwind        settlePrivate  readPosition
+```
 
-## Unverified items
+It does not expose an arbitrary Starknet call primitive.
 
-- Current STRK20 Mainnet pool and Shadow Account Anonymizer addresses.
-- Wallet action support and exact action schemas.
-- Current Vesu ETH/USDC market and risk parameters.
-- Canonical Vesu Multiply Mainnet deployment and class hash.
-- Exact ABI/calldata, token approvals, collect policy, and action ordering.
+### Identity and authorization
+
+Each GhostPosition owns its Vesu collateral and debt and receives one fresh
+STARK-curve capability public key. The matching private key stays client-side.
+Every lifecycle action reconstructs a Poseidon authorization hash over:
+
+```text
+GhostLoop domain + version
+SN_MAIN chain id
+GhostPosition address
+explicit action id
+complete parameters hash
+exact next nonce
+deadline
+```
+
+The position rejects the wrong caller, replayed/skipped nonce, expired
+authorization, wrong chain/position signature, changed parameters, invalid
+signature, and unsupported actions.
+
+### Deployment and funding
+
+The STRK20 pool calls the pinned GhostLoopAnonymizer. The anonymizer derives or
+deploys the requested GhostPosition from the position public key/salt, transfers
+the exact private input to it, and invokes one explicit lifecycle operation.
+Deployment must occur inside this path so Semih's public wallet never becomes
+the deployer or Vesu position owner.
+
+### Settlement
+
+For outputs, the anonymizer snapshots its token balance, invokes the position,
+measures the actual positive delta, approves the calling STRK20 pool, and
+returns `Span<OpenNoteDeposit>`. At most one output note per token is allowed.
+Multiply open may return an empty span; Borrow and unwind settle USDC or ETH to
+open notes.
+
+## Native migration seam
+
+When a connected wallet advertises and successfully executes the Shadow Account
+Wallet API, add `NativeShadowAccountExecutor` and switch adapters. Product
+models, forms, risk calculations, lifecycle commands, and position display must
+not depend on GhostPosition deployment or capability-key details.
+
+## Remaining proof gates
+
+- Deterministic GhostPosition deployment from the anonymizer path.
+- Every adversarial authorization and replay case.
+- Exact Vesu Borrow open/repay/close behavior on a Mainnet fork.
+- Exact canonical Multiply increase/full-unwind calldata on a Mainnet fork.
+- STRK20 input accounting and open-note output settlement.
+- Encrypted IndexedDB capability-key storage, backup, and loss warnings.
 
 These items are tracked in [RESEARCH_LOG.md](RESEARCH_LOG.md).
