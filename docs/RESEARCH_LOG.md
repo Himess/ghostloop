@@ -130,6 +130,24 @@ from assumptions. Times are recorded in UTC.
 - **Impact:** The only deadline-bound application step is complete and awaiting
   upstream review.
 
+## 2026-08-31 — Mainnet evidence tooling verified
+
+- **Time:** 2026-08-31T19:31Z
+- **Source:** GhostLoop `scripts/verify-addresses.ts` and
+  `scripts/verify-mainnet-tx.ts`; Lava Starknet Mainnet RPC.
+- **Finding:** At block `14163451`, all pinned class hashes, chain id, Vesu Prime
+  name, ETH/USDC risk values, and Multiply's Ekubo Core storage matched. The
+  transaction verifier was exercised against a recent unrelated STRK20 pool
+  transaction
+  `0x5a22066c25cd6b337a9a16bef431546a6eca86a6e4ebd6484cd65a8317a4877`
+  at block `14160026`; it reported `SUCCEEDED` and found direct pool evidence in
+  both receipt events and the execution trace.
+- **Confidence:** High — deterministic scripts and live RPC responses.
+- **Impact:** Future GhostLoop transaction hashes can be rejected automatically
+  if they fail or do not actually execute against the canonical pool. The test
+  transaction belongs to another activity and is deliberately not placed in
+  GhostLoop's `strk20.json`.
+
 ## Research queue
 
 - Resolve the fallback architecture decision before writing position ownership
