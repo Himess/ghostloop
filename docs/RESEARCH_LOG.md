@@ -123,12 +123,15 @@ from assumptions. Times are recorded in UTC.
 - **Time:** 2026-08-31T19:16Z
 - **Source:** `starkience/strk20-hackathon` pull request `#254`, commit
   `9a230d84fba7c83598cdf3057279b2bc289c26ab`.
-- **Finding:** The PR adds one two-field object for
+- **Finding:** The PR added one two-field object for
   `https://github.com/Himess/ghostloop` and Telegram `SemihCivelek`. Only
-  `registry.json` changed.
+  `registry.json` changed. The registration workflow applied it to upstream
+  `main` as `66b6ba5`, then intentionally closed rather than merged the PR to
+  avoid concurrent-registration conflicts. A fresh upstream `registry.json`
+  read confirmed the exact entry.
 - **Confidence:** High — GitHub PR diff verified.
-- **Impact:** The only deadline-bound application step is complete and awaiting
-  upstream review.
+- **Impact:** The only deadline-bound application step is complete; GhostLoop is
+  registered and should appear on the hub after its refresh cycle.
 
 ## 2026-08-31 — Mainnet evidence tooling verified
 

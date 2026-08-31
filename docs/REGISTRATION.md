@@ -2,11 +2,13 @@
 
 ## Status
 
-Submitted with the confirmed Telegram username `SemihCivelek`.
+Accepted with the confirmed Telegram username `SemihCivelek`.
 
 - Pull request: <https://github.com/starkience/strk20-hackathon/pull/254>
 - Registration commit: `9a230d84fba7c83598cdf3057279b2bc289c26ab`
-- Status at submission: open; the repository's `apply` check was pending.
+- Upstream application commit: `66b6ba5`
+- Status: applied to upstream `main`; the registration bot closed the PR after
+  rebuilding the entry on top of concurrent registrations.
 
 At `starkience/strk20-hackathon` commit
 `4df40a2f58146d5d6738502b335809db04a5fa72`, `registry.json` had 180 entries and
