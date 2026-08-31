@@ -27,24 +27,47 @@ function isPositionInterface(
   );
 }
 
-const artifactPath = resolve(
-  "contracts/target/dev/ghostloop_contracts_GhostPosition.contract_class.json",
-);
-const contractClass = JSON.parse(
-  await readFile(artifactPath, "utf8"),
-) as ContractClass;
+async function verifyInterface(
+  artifactName: string,
+  interfaceSuffix: string,
+  expectedNames: string[],
+) {
+  const artifactPath = resolve("contracts/target/dev", artifactName);
+  const contractClass = JSON.parse(
+    await readFile(artifactPath, "utf8"),
+  ) as ContractClass;
+  const contractInterface = contractClass.abi.find(
+    (item): item is AbiInterface =>
+      isPositionInterface(item) ||
+      (item.type === "interface" &&
+        "items" in item &&
+        typeof item.name === "string" &&
+        item.name.endsWith(interfaceSuffix)),
+  );
 
-const positionInterface = contractClass.abi.find(isPositionInterface);
+  if (!contractInterface) {
+    throw new Error(`${interfaceSuffix} was not found in ${artifactName}`);
+  }
 
-if (!positionInterface) {
-  throw new Error("IGhostPosition was not found in the generated contract ABI");
+  const actual = contractInterface.items
+    .filter((item) => item.type === "function")
+    .map((item) => item.name)
+    .sort();
+  const expected = [...expectedNames].sort();
+
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(
+      `${interfaceSuffix} ABI drifted. Expected ${expected.join(", ")}; received ${actual.join(", ")}`,
+    );
+  }
+
+  return actual.length;
 }
 
-const actual = positionInterface.items
-  .filter((item) => item.type === "function")
-  .map((item) => item.name)
-  .sort();
-const expected = [
+const positionEntryPoints = await verifyInterface(
+  "ghostloop_contracts_GhostPosition.contract_class.json",
+  "::IGhostPosition",
+  [
   "anonymizer",
   "borrow",
   "capability_public_key",
@@ -52,14 +75,20 @@ const expected = [
   "next_nonce",
   "read_position",
   "repay",
-].sort();
-
-if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-  throw new Error(
-    `GhostPosition ABI drifted. Expected ${expected.join(", ")}; received ${actual.join(", ")}`,
-  );
-}
+  ],
+);
+const anonymizerEntryPoints = await verifyInterface(
+  "ghostloop_contracts_GhostLoopAnonymizer.contract_class.json",
+  "::IGhostLoopAnonymizer",
+  [
+    "get_position",
+    "position_class_hash",
+    "predict_position",
+    "privacy_invoke",
+    "privacy_pool",
+  ],
+);
 
 console.log(
-  `GhostPosition ABI is minimal: ${actual.length} explicit entry points and no arbitrary-call surface.`,
+  `Contract ABIs are minimal: ${positionEntryPoints} position and ${anonymizerEntryPoints} anonymizer entry points, with no arbitrary-call surface.`,
 );

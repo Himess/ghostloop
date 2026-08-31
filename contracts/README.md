@@ -12,8 +12,14 @@ Current checkpoint:
 - domain-separated per-position authorization hash;
 - chain, position, action, complete parameters, nonce, and deadline binding;
 - exact-next-nonce replay protection;
+- pool-pinned `GhostLoopAnonymizer` deployment and funding path;
+- deterministic position addresses derived from capability key, salt, class,
+  constructor calldata, and anonymizer address;
+- capability-signed creation binding chain, predicted position, amount, nonce,
+  and deadline;
 - explicit Vesu Prime Borrow, Repay, and CloseBorrow entry points;
-- no Multiply or anonymizer deployment path yet.
+- exact empty `OpenNoteDeposit` return for funding-only `privacy_invoke`;
+- no Multiply or anonymizer Borrow/Repay/Close dispatch yet.
 
 Do not deploy until all gates in [`../docs/SECURITY.md`](../docs/SECURITY.md)
 pass.
@@ -40,3 +46,7 @@ shapes in `src/interfaces.cairo` are adapted from
 which is MIT licensed. No Vesu execution implementation is vendored here; the
 types keep GhostLoop calls typed instead of hand-encoding raw calldata. See
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+The `OpenNoteDeposit` ABI shape is reproduced from StarkWare's Apache-2.0
+`starknet-privacy` package so the privacy pool can deserialize the helper's
+return value exactly.

@@ -5,6 +5,7 @@ use starknet::ContractAddress;
 pub const AUTH_DOMAIN: felt252 = 'GHOSTLOOP_AUTH';
 pub const AUTH_VERSION: felt252 = 1;
 
+pub const ACTION_CREATE_AND_FUND: felt252 = 0;
 pub const ACTION_BORROW: felt252 = 1;
 pub const ACTION_REPAY: felt252 = 2;
 pub const ACTION_CLOSE_BORROW: felt252 = 3;
@@ -49,6 +50,17 @@ pub fn hash_borrow_parameters(
         .update(debt_amount.high.into())
         .update(minimum_borrowed.low.into())
         .update(minimum_borrowed.high.into())
+        .finalize()
+}
+
+pub fn hash_create_and_fund_parameters(
+    amount: u256, capability_public_key: felt252, position_salt: felt252,
+) -> felt252 {
+    PoseidonTrait::new()
+        .update(amount.low.into())
+        .update(amount.high.into())
+        .update(capability_public_key)
+        .update(position_salt)
         .finalize()
 }
 

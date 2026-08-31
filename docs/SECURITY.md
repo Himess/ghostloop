@@ -52,3 +52,17 @@ No value-bearing Mainnet deployment until:
 4. Multiply increase/full unwind passes on a Mainnet fork;
 5. an independent contract review is completed; and
 6. the first deployment uses the smallest practical values.
+
+## Anonymizer deployment boundary
+
+- `GhostLoopAnonymizer` accepts `privacy_invoke` only from its immutable STRK20
+  pool address.
+- Position deployment uses the anonymizer contract as deployer, so no public
+  wallet appears in the deployment path.
+- Creation authorization binds the actual chain ID, predicted position address,
+  create-and-fund action, full amount/key/salt parameters, nonce zero, and a
+  deadline.
+- The funding-only operation returns an exact empty `Span<OpenNoteDeposit>`;
+  later settlement operations must approve the pinned pool and return measured
+  non-zero output deltas.
+- The helper has no arbitrary-call entry point. Any ABI expansion fails CI.

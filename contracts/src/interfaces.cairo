@@ -1,6 +1,14 @@
 use alexandria_math::i257::i257;
 use starknet::ContractAddress;
 
+/// ABI-compatible with `privacy::objects::OpenNoteDeposit`.
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
+pub struct OpenNoteDeposit {
+    pub note_id: felt252,
+    pub token: ContractAddress,
+    pub amount: u128,
+}
+
 #[derive(PartialEq, Copy, Drop, Serde)]
 pub struct Position {
     pub collateral_shares: u256,
