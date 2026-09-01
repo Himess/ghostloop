@@ -28,6 +28,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+## Vesu v2 periphery
+
+The ABI-compatible Multiply parameter, action, response, route, and token
+amount shapes in `src/interfaces.cairo` are adapted from Vesu v2 periphery at
+commit
+[`3aa1b95af0663cd1fc575cef31ded88816e67277`](https://github.com/vesuxyz/vesu-v2-periphery/tree/3aa1b95af0663cd1fc575cef31ded88816e67277).
+That upstream repository is distributed under the Business Source License
+1.1; see its pinned [`LICENSE`](https://github.com/vesuxyz/vesu-v2-periphery/blob/3aa1b95af0663cd1fc575cef31ded88816e67277/LICENSE).
+No Multiply, swap, callback, or Ekubo execution implementation is vendored.
+
+The `PoolKey` and `i129` field layouts were independently checked against the
+canonical deployed Multiply V2 class ABI at Mainnet block `4172487`.
+
 ## Starknet Privacy
 
 The ABI-compatible `OpenNoteDeposit` structure in `src/interfaces.cairo` is

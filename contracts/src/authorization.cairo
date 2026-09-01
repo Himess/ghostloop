@@ -74,3 +74,24 @@ pub fn hash_close_borrow_parameters(maximum_debt_input: u256) -> felt252 {
         .update(maximum_debt_input.high.into())
         .finalize()
 }
+
+pub fn hash_increase_leverage_parameters(
+    add_margin: u256, debt_amount: u128, minimum_lever_collateral: u128,
+) -> felt252 {
+    PoseidonTrait::new()
+        .update(add_margin.low.into())
+        .update(add_margin.high.into())
+        .update(debt_amount.into())
+        .update(minimum_lever_collateral.into())
+        .finalize()
+}
+
+pub fn hash_unwind_parameters(
+    maximum_collateral_swap: u128, minimum_collateral_returned: u256,
+) -> felt252 {
+    PoseidonTrait::new()
+        .update(maximum_collateral_swap.into())
+        .update(minimum_collateral_returned.low.into())
+        .update(minimum_collateral_returned.high.into())
+        .finalize()
+}

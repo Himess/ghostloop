@@ -40,8 +40,8 @@ The first milestone is evidence, not UI polish:
 2. ~~Verify live STRK20 and Vesu ETH/USDC contracts and configuration.~~
 3. ~~Verify whether a canonical Vesu Multiply deployment exists.~~
 4. ~~Implement the minimal signed GhostPosition authorization boundary.~~
-5. Prove borrow, Multiply, and full unwind on a Mainnet fork. Borrow/repay/close
-   now passes at pinned block `4172487`; Multiply/unwind remains.
+5. ~~Prove borrow, Multiply, and full unwind on a Mainnet fork.~~ Both lifecycle
+   proofs pass against canonical contracts at pinned block `4172487`.
 
 Research is recorded in [docs/RESEARCH_LOG.md](docs/RESEARCH_LOG.md), and
 architectural decisions in [docs/DECISIONS.md](docs/DECISIONS.md).

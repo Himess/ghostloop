@@ -188,6 +188,33 @@ pub mod MockGhostPosition {
             (self.reported_collateral.read(), self.reported_refund.read())
         }
 
+        fn increase_leverage(
+            ref self: ContractState,
+            add_margin: u256,
+            debt_amount: u128,
+            minimum_lever_collateral: u128,
+            authorization: Authorization,
+        ) -> (u256, u256) {
+            let _ = (add_margin, debt_amount, minimum_lever_collateral, authorization);
+            self.assert_anonymizer();
+            (0, 0)
+        }
+
+        fn unwind(
+            ref self: ContractState,
+            maximum_collateral_swap: u128,
+            minimum_collateral_returned: u256,
+            authorization: Authorization,
+        ) -> u256 {
+            let _ = (maximum_collateral_swap, minimum_collateral_returned, authorization);
+            self.assert_anonymizer();
+            self
+                .transfer(
+                    self.eth.read(), self.anonymizer.read(), self.transferred_collateral.read(),
+                );
+            self.reported_collateral.read()
+        }
+
         fn read_position(self: @ContractState) -> (Position, u256, u256) {
             (Position { collateral_shares: 0, nominal_debt: 0 }, 0, 0)
         }

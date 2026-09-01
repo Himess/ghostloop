@@ -61,11 +61,10 @@ GhostLoop product flows
   → Vesu Prime / canonical Vesu Multiply V2 / Ekubo
 ```
 
-The execution boundary exposes only:
+The execution boundary exposes only the lifecycle operations represented by:
 
 ```text
-createPosition  fundPosition  borrow  repay  closeBorrow
-multiply        unwind        settlePrivate  readPosition
+CreateAndFund  Borrow  Repay  CloseBorrow  IncreaseLeverage  Unwind
 ```
 
 It does not expose an arbitrary Starknet call primitive.
@@ -113,13 +112,13 @@ Wallet API, add `NativeShadowAccountExecutor` and switch adapters. Product
 models, forms, risk calculations, lifecycle commands, and position display must
 not depend on GhostPosition deployment or capability-key details.
 
-## Remaining proof gates
+## Proof-gate status
 
-- Deterministic GhostPosition deployment from the anonymizer path.
-- Every adversarial authorization and replay case.
-- Exact Vesu Borrow open/repay/close behavior on a Mainnet fork.
-- Exact canonical Multiply increase/full-unwind calldata on a Mainnet fork.
-- STRK20 input accounting and open-note output settlement.
+- ~~Deterministic GhostPosition deployment from the anonymizer path.~~
+- ~~Every adversarial authorization and replay case.~~
+- ~~Exact Vesu Borrow open/repay/close behavior on a Mainnet fork.~~
+- ~~Exact canonical Multiply increase/full-unwind calldata on a Mainnet fork.~~
+- ~~STRK20 input accounting and open-note output settlement.~~
 - Encrypted IndexedDB capability-key storage, backup, and loss warnings.
 
 These items are tracked in [RESEARCH_LOG.md](RESEARCH_LOG.md).

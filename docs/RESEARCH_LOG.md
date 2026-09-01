@@ -193,12 +193,34 @@ from assumptions. Times are recorded in UTC.
   current-market preflight passes or a separately reviewed market decision is
   made; the test does not justify silently switching pools.
 
+## 2026-09-01 — Canonical Multiply V2 increase and full unwind pass
+
+- **Time:** 2026-09-01T03:05+03:00
+- **Source:** Canonical Mainnet Multiply V2 contract and class ABI at block
+  `4172487`; `vesuxyz/vesu-v2-periphery` commit
+  `3aa1b95af0663cd1fc575cef31ded88816e67277`; GhostLoop Starknet Foundry
+  fork test.
+- **Finding:** The deployed ABI exactly matches the upstream `PoolKey`, `i129`,
+  route, swap, increase/decrease parameters, action enum, and response layout.
+  GhostPosition called canonical Multiply as the Vesu position owner, delegated
+  only that pinned contract, and used a contract-constructed one-hop ETH/USDC
+  Ekubo route. Starting with 0.02 ETH margin, the test borrowed and swapped 20
+  USDC into additional collateral, observed both Vesu collateral and debt grow,
+  then used `close_position: true` to swap collateral for the exact debt and
+  fully unwind. Final Vesu shares, nominal debt, collateral assets, and debt
+  assets were all zero; residual ETH returned to the anonymizer identity. The
+  capability nonces advanced exactly from 0 through 1.
+- **Confidence:** High — pinned upstream source, live deployed ABI, and an
+  end-to-end archive-fork execution against canonical Prime, Multiply V2,
+  Ekubo, ETH, and USDC agree.
+- **Impact:** The remaining contract lifecycle proof is complete. Production
+  is still blocked by the current Prime ETH/USDC cap, independent review, real
+  Wallet API prepare dry-runs, and encrypted client capability-key handling.
+
 ## Research queue
 
 - Serialize each helper enum variant into Wallet API actions and execute a real
   `strk20PrepareInvoke(..., true)` dry-run with a supporting wallet.
-- Build the Multiply/unwind lifecycle proof on a Mainnet fork.
-- Verify canonical Multiply V2 and Ekubo calldata against the pinned deployment.
 - Implement encrypted client-side capability-key storage and recovery warnings.
 - Execute the native Shadow Account Wallet API probe if a newer Ready release
   advertises support.

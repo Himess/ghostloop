@@ -110,9 +110,11 @@ const positionEntryPoints = await verifyInterface(
   "borrow",
   "capability_public_key",
   "close_borrow",
+  "increase_leverage",
   "next_nonce",
   "read_position",
   "repay",
+  "unwind",
   ],
 );
 const anonymizerEntryPoints = await verifyInterface(
@@ -129,7 +131,14 @@ const anonymizerEntryPoints = await verifyInterface(
 const anonymizerOperations = await verifyEnumVariants(
   "ghostloop_contracts_GhostLoopAnonymizer.contract_class.json",
   "::GhostLoopOperation",
-  ["CreateAndFund", "Borrow", "Repay", "CloseBorrow"],
+  [
+    "CreateAndFund",
+    "Borrow",
+    "Repay",
+    "CloseBorrow",
+    "IncreaseLeverage",
+    "Unwind",
+  ],
 );
 
 console.log(

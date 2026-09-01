@@ -38,11 +38,32 @@ pub struct CloseBorrowInput {
 }
 
 #[derive(Serde, Copy, Drop, PartialEq, Debug)]
+pub struct IncreaseLeverageInput {
+    pub capability_public_key: felt252,
+    pub position_salt: felt252,
+    pub debt_amount: u128,
+    pub minimum_lever_collateral: u128,
+    pub authorization: Authorization,
+}
+
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
+pub struct UnwindInput {
+    pub capability_public_key: felt252,
+    pub position_salt: felt252,
+    pub maximum_collateral_swap: u128,
+    pub minimum_collateral_returned: u256,
+    pub collateral_note_id: felt252,
+    pub authorization: Authorization,
+}
+
+#[derive(Serde, Copy, Drop, PartialEq, Debug)]
 pub enum GhostLoopOperation {
     CreateAndFund: CreateAndFundInput,
     Borrow: BorrowInput,
     Repay: RepayInput,
     CloseBorrow: CloseBorrowInput,
+    IncreaseLeverage: IncreaseLeverageInput,
+    Unwind: UnwindInput,
 }
 
 #[starknet::interface]
@@ -114,7 +135,7 @@ pub mod GhostLoopAnonymizer {
     use crate::ghost_position::{IGhostPositionDispatcher, IGhostPositionDispatcherTrait};
     use crate::ghostloop_anonymizer::{
         BorrowInput, CloseBorrowInput, CreateAndFundInput, GhostLoopOperation, IGhostLoopAnonymizer,
-        RepayInput, errors,
+        IncreaseLeverageInput, RepayInput, UnwindInput, errors,
     };
     use crate::interfaces::{IERC20Dispatcher, IERC20DispatcherTrait, OpenNoteDeposit};
 
@@ -413,6 +434,62 @@ pub mod GhostLoopAnonymizer {
             }
             deposits.span()
         }
+
+        fn increase_leverage(
+            ref self: ContractState,
+            in_token: ContractAddress,
+            out_token: ContractAddress,
+            add_margin: u256,
+            input: IncreaseLeverageInput,
+        ) -> Span<OpenNoteDeposit> {
+            let eth = self.eth.read();
+            assert(in_token == eth && out_token == eth, errors::INVALID_TOKEN);
+            let position = self
+                .position_or_revert(input.capability_public_key, input.position_salt);
+            self.transfer_exact(eth, position, add_margin);
+            IGhostPositionDispatcher { contract_address: position }
+                .increase_leverage(
+                    add_margin,
+                    input.debt_amount,
+                    input.minimum_lever_collateral,
+                    input.authorization,
+                );
+            array![].span()
+        }
+
+        fn unwind(
+            ref self: ContractState,
+            in_token: ContractAddress,
+            out_token: ContractAddress,
+            settlement_anchor: u256,
+            input: UnwindInput,
+        ) -> Span<OpenNoteDeposit> {
+            let eth = self.eth.read();
+            assert(in_token == eth && out_token == eth, errors::INVALID_TOKEN);
+            assert(input.collateral_note_id.is_non_zero(), errors::NOTE_ID_REQUIRED);
+            let position = self
+                .position_or_revert(input.capability_public_key, input.position_salt);
+            self.transfer_exact(eth, position, settlement_anchor);
+
+            let balance_before = IERC20Dispatcher { contract_address: eth }
+                .balance_of(get_contract_address());
+            let reported = IGhostPositionDispatcher { contract_address: position }
+                .unwind(
+                    input.maximum_collateral_swap,
+                    input.minimum_collateral_returned,
+                    input.authorization,
+                );
+            let received = self.measured_delta(eth, balance_before);
+            assert(received == reported, errors::OUTPUT_MISMATCH);
+            let note_amount = self.checked_note_amount(received);
+            self.approve_pool(eth, received);
+            array![
+                OpenNoteDeposit {
+                    note_id: input.collateral_note_id, token: eth, amount: note_amount,
+                },
+            ]
+                .span()
+        }
     }
 
     #[abi(embed_v0)]
@@ -438,6 +515,12 @@ pub mod GhostLoopAnonymizer {
                 },
                 GhostLoopOperation::CloseBorrow(input) => {
                     self.close_borrow(in_token, out_token, amount, input)
+                },
+                GhostLoopOperation::IncreaseLeverage(input) => {
+                    self.increase_leverage(in_token, out_token, amount, input)
+                },
+                GhostLoopOperation::Unwind(input) => {
+                    self.unwind(in_token, out_token, amount, input)
                 },
             }
         }

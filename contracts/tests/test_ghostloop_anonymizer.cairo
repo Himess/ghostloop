@@ -5,7 +5,8 @@ use ghostloop_contracts::authorization::{
 use ghostloop_contracts::ghost_position::{IGhostPositionDispatcher, IGhostPositionDispatcherTrait};
 use ghostloop_contracts::ghostloop_anonymizer::{
     BorrowInput, CloseBorrowInput, CreateAndFundInput, GhostLoopOperation,
-    IGhostLoopAnonymizerDispatcher, IGhostLoopAnonymizerDispatcherTrait, RepayInput,
+    IGhostLoopAnonymizerDispatcher, IGhostLoopAnonymizerDispatcherTrait, IncreaseLeverageInput,
+    RepayInput, UnwindInput,
 };
 use snforge_std::signature::stark_curve::{
     StarkCurveKeyPair, StarkCurveKeyPairImpl, StarkCurveSignerImpl,
@@ -140,6 +141,102 @@ fn close_input(fixture: @Fixture, refund_note_id: felt252) -> CloseBorrowInput {
         debt_refund_note_id: refund_note_id,
         authorization: dummy_authorization(),
     }
+}
+
+fn increase_leverage_input(fixture: @Fixture) -> IncreaseLeverageInput {
+    IncreaseLeverageInput {
+        capability_public_key: *fixture.key.public_key,
+        position_salt: POSITION_SALT,
+        debt_amount: 20_000_000,
+        minimum_lever_collateral: 1,
+        authorization: dummy_authorization(),
+    }
+}
+
+fn unwind_input(fixture: @Fixture) -> UnwindInput {
+    UnwindInput {
+        capability_public_key: *fixture.key.public_key,
+        position_salt: POSITION_SALT,
+        maximum_collateral_swap: 10_000_000_000_000_000,
+        minimum_collateral_returned: 1,
+        collateral_note_id: COLLATERAL_NOTE_ID,
+        authorization: dummy_authorization(),
+    }
+}
+
+#[test]
+fn increase_leverage_forwards_exact_margin_and_returns_no_deposit() {
+    let fixture = setup();
+    let position = create_position(@fixture, 1);
+    let add_margin = 20_000_000_000_000_000;
+    fixture.eth.mint(fixture.anonymizer_address, add_margin);
+    let position_before = fixture.eth.balance_of(position);
+
+    let deposits = fixture
+        .anonymizer
+        .privacy_invoke(
+            fixture.eth_address,
+            fixture.eth_address,
+            add_margin,
+            GhostLoopOperation::IncreaseLeverage(increase_leverage_input(@fixture)),
+        );
+
+    assert(deposits.len() == 0, 'EXPECTED_EMPTY_DEPOSITS');
+    assert(fixture.eth.balance_of(fixture.anonymizer_address) == 0, 'MARGIN_NOT_FORWARDED');
+    assert(fixture.eth.balance_of(position) == position_before + add_margin, 'MARGIN_MISMATCH');
+}
+
+#[test]
+fn unwind_credits_measured_collateral_to_one_open_note() {
+    let fixture = setup();
+    let initial_position_balance = 10;
+    let settlement_anchor = 1;
+    let position = create_position(@fixture, initial_position_balance);
+    fixture.eth.mint(fixture.anonymizer_address, settlement_anchor);
+    let returned = initial_position_balance + settlement_anchor;
+    IMockGhostPositionDispatcher { contract_address: position }
+        .configure_close(returned, 0, returned, 0);
+
+    let deposits = fixture
+        .anonymizer
+        .privacy_invoke(
+            fixture.eth_address,
+            fixture.eth_address,
+            settlement_anchor,
+            GhostLoopOperation::Unwind(unwind_input(@fixture)),
+        );
+
+    assert(deposits.len() == 1, 'EXPECTED_ONE_DEPOSIT');
+    let deposit = *deposits[0];
+    assert(deposit.note_id == COLLATERAL_NOTE_ID, 'WRONG_NOTE');
+    assert(deposit.token == fixture.eth_address, 'WRONG_TOKEN');
+    assert(deposit.amount == returned.try_into().unwrap(), 'WRONG_AMOUNT');
+    assert(
+        fixture.eth.allowance(fixture.anonymizer_address, fixture.pool) == returned,
+        'WRONG_APPROVAL',
+    );
+}
+
+#[test]
+#[should_panic(expected: 'OUTPUT_MISMATCH')]
+fn rejects_unwind_return_that_disagrees_with_measured_collateral() {
+    let fixture = setup();
+    let initial_position_balance = 10;
+    let settlement_anchor = 1;
+    let position = create_position(@fixture, initial_position_balance);
+    fixture.eth.mint(fixture.anonymizer_address, settlement_anchor);
+    let transferred = initial_position_balance + settlement_anchor;
+    IMockGhostPositionDispatcher { contract_address: position }
+        .configure_close(transferred, 0, transferred - 1, 0);
+
+    fixture
+        .anonymizer
+        .privacy_invoke(
+            fixture.eth_address,
+            fixture.eth_address,
+            settlement_anchor,
+            GhostLoopOperation::Unwind(unwind_input(@fixture)),
+        );
 }
 
 #[test]
