@@ -69,6 +69,23 @@ CreateAndFund  Borrow  Repay  CloseBorrow  IncreaseLeverage  Unwind
 
 It does not expose an arbitrary Starknet call primitive.
 
+### Wallet action serialization
+
+The ordinary Wallet API adapter builds one typed `STRK20_ACTION[]` sequence per
+closed operation. Private input is consumed by the helper's single invoke;
+Borrow and unwind add one `OPEN` transfer, while CloseBorrow adds a collateral
+note and an optional debt-refund note. Calldata uses the wallet-resolved
+`${openNoteIds[N]}` placeholder and never requests a viewing key.
+
+`scripts/verify-wallet-actions.ts` checks fixed golden sequences and independently
+asks starknet.js to populate `privacy_invoke` from the generated anonymizer ABI.
+The two felt arrays must match for all six enum variants. The ABI verifier also
+locks enum order because Cairo serializes the variant index into calldata.
+
+All private helper inputs are limited to `u128`; the helper ABI encodes them as
+`u256` with a zero high limb. This preserves the pool-facing low-felt amount
+convention while rejecting ambiguous oversized input client-side.
+
 ### Identity and authorization
 
 Each GhostPosition owns its Vesu collateral and debt and receives one fresh
@@ -119,6 +136,9 @@ not depend on GhostPosition deployment or capability-key details.
 - ~~Exact Vesu Borrow open/repay/close behavior on a Mainnet fork.~~
 - ~~Exact canonical Multiply increase/full-unwind calldata on a Mainnet fork.~~
 - ~~STRK20 input accounting and open-note output settlement.~~
+- ~~Exact Wallet API action and helper calldata serialization.~~
+- Connected-wallet `strk20PrepareInvoke(actions, true)` simulation against a
+  deployed reviewed helper.
 - Encrypted IndexedDB capability-key storage, backup, and loss warnings.
 
 These items are tracked in [RESEARCH_LOG.md](RESEARCH_LOG.md).

@@ -91,8 +91,8 @@ async function verifyEnumVariants(
     throw new Error(`${enumSuffix} was not found in ${artifactName}`);
   }
 
-  const actual = abiEnum.variants.map((variant) => variant.name).sort();
-  const expected = [...expectedNames].sort();
+  const actual = abiEnum.variants.map((variant) => variant.name);
+  const expected = [...expectedNames];
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(
       `${enumSuffix} drifted. Expected ${expected.join(", ")}; received ${actual.join(", ")}`,

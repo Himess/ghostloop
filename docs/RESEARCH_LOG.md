@@ -217,10 +217,29 @@ from assumptions. Times are recorded in UTC.
   is still blocked by the current Prime ETH/USDC cap, independent review, real
   Wallet API prepare dry-runs, and encrypted client capability-key handling.
 
+## 2026-09-01 — Wallet actions match the generated Cairo ABI
+
+- **Time:** 2026-09-01T01:54Z
+- **Source:** starknet.js `10.4.0`, Wallet API types `0.10.3`, and GhostLoop's
+  generated `GhostLoopAnonymizer` Sierra ABI.
+- **Finding:** Typed builders now emit exact action sequences for
+  `CreateAndFund`, `Borrow`, `Repay`, `CloseBorrow`, `IncreaseLeverage`, and
+  `Unwind`. Golden tests lock transfer ordering, `${openNoteIds[N]}` indices,
+  enum discriminants, `u256` limb order, `u64` authorization values, and
+  `u128` private-input limits. A separate check compiles every operation through
+  starknet.js `Contract.populate` from the generated Cairo ABI and compares the
+  resulting felt array with the Wallet API invoke calldata. The enum ABI check
+  now preserves declaration order rather than sorting variants.
+- **Confidence:** High for offline action/ABI serialization. No wallet or
+  transaction was simulated or submitted.
+- **Impact:** Client and contract calldata drift now fails deterministically.
+  A real `strk20PrepareInvoke(actions, true)` remains blocked until a reviewed
+  helper is deployed and a compatible registered wallet is connected.
+
 ## Research queue
 
-- Serialize each helper enum variant into Wallet API actions and execute a real
-  `strk20PrepareInvoke(..., true)` dry-run with a supporting wallet.
+- Execute a real `strk20PrepareInvoke(..., true)` dry-run with a supporting
+  wallet after a reviewed helper deployment exists.
 - Implement encrypted client-side capability-key storage and recovery warnings.
 - Execute the native Shadow Account Wallet API probe if a newer Ready release
   advertises support.

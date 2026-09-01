@@ -11,6 +11,7 @@
   "scripts": {
     "check": "tsc --noEmit",
     "verify:contract-abi": "tsx scripts/verify-contract-abi.ts",
+    "verify:wallet-actions": "tsx scripts/verify-wallet-actions.ts",
     "verify:addresses": "tsx scripts/verify-addresses.ts",
     "preflight:vesu": "tsx scripts/preflight-vesu-market.ts",
     "verify:tx": "tsx scripts/verify-mainnet-tx.ts",

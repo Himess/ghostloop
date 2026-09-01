@@ -34,13 +34,14 @@ export type CloseBorrowRequest = {
 
 export type MultiplyRequest = {
   marginAmount: bigint;
-  targetLeverageBps: 15_000 | 20_000 | 25_000;
-  minimumCollateralReceived: bigint;
+  debtAmount: bigint;
+  minimumLeverCollateral: bigint;
 };
 
 export type UnwindRequest = {
-  minimumResidualCollateral: bigint;
-  maximumDebtInput: bigint;
+  settlementAnchor: bigint;
+  maximumCollateralSwap: bigint;
+  minimumCollateralReturned: bigint;
 };
 
 /**
