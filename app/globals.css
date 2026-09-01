@@ -34,6 +34,7 @@ body {
     var(--bg);
   font-family: var(--font-geist-sans), Arial, sans-serif;
   min-width: 320px;
+  overflow-x: clip;
 }
 
 button,
@@ -64,6 +65,8 @@ a {
 }
 
 .topbar {
+  position: relative;
+  z-index: 20;
   height: 86px;
   display: flex;
   align-items: center;
@@ -138,7 +141,222 @@ a {
 
 .walletButton {
   color: #c7cbd3;
-  cursor: not-allowed;
+  cursor: pointer;
+}
+
+.walletButton:disabled {
+  cursor: wait;
+}
+
+.walletButton.walletConnected {
+  color: var(--lime);
+  border-color: rgba(200, 255, 98, 0.24);
+  background: var(--lime-soft);
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.walletConnector {
+  position: relative;
+}
+
+.walletPopover {
+  position: absolute;
+  top: 49px;
+  right: 0;
+  width: min(355px, calc(100vw - 22px));
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 15px;
+  background: rgba(16, 19, 25, 0.98);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(18px);
+}
+
+.walletPopoverHeading,
+.walletConnectionDetails,
+.walletChoice,
+.walletPopoverFooter {
+  display: flex;
+  align-items: center;
+}
+
+.walletPopoverHeading {
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.walletPopoverHeading strong,
+.walletPopoverHeading span {
+  display: block;
+}
+
+.walletPopoverHeading strong {
+  font-size: 13px;
+}
+
+.walletPopoverHeading span {
+  margin-top: 4px;
+  color: var(--muted-2);
+  font-size: 9px;
+}
+
+.walletPopoverHeading > button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.walletList {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.walletList > p,
+.walletEmpty {
+  margin: 0;
+  padding: 17px 13px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 11px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 10px;
+}
+
+.walletEmpty strong {
+  color: #cdd1d8;
+  font-size: 11px;
+}
+
+.walletEmpty p {
+  margin: 5px 0 0;
+  line-height: 1.45;
+}
+
+.walletChoice {
+  width: 100%;
+  gap: 11px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.walletChoice:hover {
+  border-color: rgba(200, 255, 98, 0.25);
+  background: var(--lime-soft);
+}
+
+.walletChoice > span:nth-child(2) {
+  flex: 1;
+}
+
+.walletChoice strong,
+.walletChoice small {
+  display: block;
+}
+
+.walletChoice strong {
+  font-size: 11px;
+}
+
+.walletChoice small {
+  margin-top: 3px;
+  color: var(--muted-2);
+  font-size: 8px;
+}
+
+.walletInitial,
+.walletIdentityMark {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  background: var(--surface-3);
+  color: var(--lime);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+}
+
+.walletPopoverFooter {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.walletPopoverFooter button,
+.walletPopoverFooter a,
+.walletConnectionDetails > button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  font-size: 9px;
+  text-decoration: none;
+}
+
+.walletPopoverFooter a:hover,
+.walletPopoverFooter button:hover {
+  color: var(--lime);
+}
+
+.walletPrivacyNote,
+.walletMessage {
+  margin: 13px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted-2);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.walletMessage {
+  color: var(--danger);
+}
+
+.walletConnectionDetails {
+  gap: 11px;
+  padding: 15px 0 3px;
+}
+
+.walletConnectionDetails > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.walletConnectionDetails strong,
+.walletConnectionDetails code,
+.walletConnectionDetails small {
+  display: block;
+}
+
+.walletConnectionDetails strong {
+  font-size: 11px;
+}
+
+.walletConnectionDetails code {
+  overflow: hidden;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+}
+
+.walletConnectionDetails small {
+  margin-top: 4px;
+  color: var(--lime);
+  font-size: 8px;
 }
 
 .hero {

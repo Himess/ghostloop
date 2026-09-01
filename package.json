@@ -15,6 +15,7 @@
     "check": "tsc --noEmit",
     "verify:contract-abi": "tsx scripts/verify-contract-abi.ts",
     "verify:wallet-actions": "tsx scripts/verify-wallet-actions.ts",
+    "verify:wallet-capability": "tsx scripts/verify-wallet-capability.ts",
     "verify:key-store": "tsx scripts/verify-position-key-store.ts",
     "verify:risk": "tsx scripts/verify-position-risk.ts",
     "verify:addresses": "tsx scripts/verify-addresses.ts",
@@ -23,6 +24,10 @@
     "evidence": "tsx scripts/export-mainnet-evidence.ts"
   },
   "dependencies": {
+    "@starknet-io/get-starknet-discovery": "6.0.2",
+    "@starknet-io/get-starknet-virtual-wallet": "6.0.2",
+    "@starknet-io/get-starknet-wallet-standard": "6.0.2",
+    "@starknet-io/types-js": "0.10.3",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",

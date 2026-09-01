@@ -86,6 +86,20 @@ All private helper inputs are limited to `u128`; the helper ABI encodes them as
 `u256` with a zero high limb. This preserves the pool-facing low-felt amount
 convention while rejecting ambiguous oversized input client-side.
 
+### Wallet capability and simulation boundary
+
+Browser discovery is loaded only when the user opens the wallet picker. Each
+wallet is queried with `supportedWalletApi` and `requestChainId` before account
+access; GhostLoop requires Wallet API `0.10.3+` and `SN_MAIN`. Capability
+detection never calls `strk20Balances`, so it does not ask for unnecessary
+private-data consent.
+
+After an explicit compatible-wallet connection, GhostLoop narrows the runtime
+account object to a single `prepare(actions)` function. That function always
+calls `strk20PrepareInvoke(actions, true)` and does not expose transaction
+submission. The browser provider uses a public Mainnet RPC; authenticated RPC
+configuration and environment variables stay server-side.
+
 ### Identity and authorization
 
 Each GhostPosition owns its Vesu collateral and debt and receives one fresh
@@ -154,6 +168,8 @@ not depend on GhostPosition deployment or capability-key details.
 - ~~Encrypted per-position capability keys and authenticated backup/import.~~
 - ~~Live Vesu-backed Borrow/Multiply previews with a fail-closed execution
   gate.~~
+- ~~Wallet discovery, `0.10.3+`/Mainnet capability gates, and a prepare-only
+  simulation boundary.~~
 - Connected-wallet `strk20PrepareInvoke(actions, true)` simulation against a
   deployed reviewed helper.
 - Capability-key backup and irreversible-loss warnings in the UI.

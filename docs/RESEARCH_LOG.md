@@ -279,6 +279,31 @@ from assumptions. Times are recorded in UTC.
   disabled until the live market, review, compatible-wallet, and key-backup
   gates all pass.
 
+## 2026-09-01 — Wallet connection is capability-gated and prepare-only
+
+- **Time:** 2026-09-01T09:58:00Z
+- **Source:** starknet.js `10.4.0`, get-starknet discovery/wallet-standard
+  `6.0.2`, Wallet API types `0.10.3`, GhostLoop's deterministic capability
+  verifier, production build, and local HTTP render.
+- **Finding:** Wallet discovery now starts only when the picker opens. Before
+  asking for an account, GhostLoop queries `supportedWalletApi` and
+  `requestChainId`, requires `0.10.3+` on `SN_MAIN`, and never probes
+  `strk20Balances`. A successful connection is narrowed at runtime to one
+  `prepare(actions)` method which always invokes
+  `strk20PrepareInvoke(actions, true)`; transaction submission is not exposed.
+  The initially evaluated get-starknet `6.0.3` packages pulled Wallet API
+  `0.10.4-beta` types and failed against starknet.js `10.4.0`; pinning the
+  mutually compatible `6.0.2`/`0.10.3` family removed the conflict without a
+  type cast. No real wallet was connected or prompted.
+- **Confidence:** High for capability ordering, Mainnet rejection, absence of
+  balance reads, and the simulation-only wrapper; deterministic tests and the
+  production compiler enforce those boundaries. Interactive extension QA is
+  still pending in a browser with a compatible installed wallet.
+- **Impact:** The frontend can honestly discover and connect a supported
+  privacy wallet without broadening access to private wallet data or enabling
+  submission. The live prepare proof remains gated on a reviewed deployed
+  helper and compatible wallet.
+
 ## Research queue
 
 - Execute a real `strk20PrepareInvoke(..., true)` dry-run with a supporting

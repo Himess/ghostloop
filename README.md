@@ -11,10 +11,11 @@ provides lending and risk management. Ekubo provides swap liquidity for
 Multiply and unwind flows.
 
 > Status: Option B contracts, Wallet API serialization, encrypted capability
-> keys, and the live-data position dashboard are implemented. Contract
-> lifecycles are fork-proven. Live deployment remains gated by Vesu market
-> capacity, independent review, and a connected-wallet prepare dry-run. No
-> deployment, demo URL, contract address, or transaction hash is claimed yet.
+> keys, the live-data position dashboard, and fail-closed privacy-wallet
+> capability detection are implemented. Contract lifecycles are fork-proven.
+> Live deployment remains gated by Vesu market capacity, independent review,
+> and a connected-wallet prepare dry-run. No deployment, demo URL, contract
+> address, or transaction hash is claimed yet.
 
 ## Product flows
 
@@ -51,6 +52,9 @@ The first milestone is evidence, not UI polish:
    dashboard renders current oracle and market state server-side, applies a
    10-point LTV buffer, and keeps every execution control disabled while a
    required safety gate is incomplete.
+8. ~~Add privacy-wallet capability detection and a prepare-only boundary.~~
+   Discovery requires Wallet API `0.10.3+` on Mainnet before account access;
+   the narrowed connection can simulate but cannot submit a transaction.
 
 Research is recorded in [docs/RESEARCH_LOG.md](docs/RESEARCH_LOG.md), and
 architectural decisions in [docs/DECISIONS.md](docs/DECISIONS.md).
@@ -66,6 +70,7 @@ npm run check
 npm run build
 npm run verify:contract-abi
 npm run verify:wallet-actions
+npm run verify:wallet-capability
 npm run verify:key-store
 npm run verify:risk
 npm run verify:addresses
@@ -84,6 +89,12 @@ request or transaction.
 
 `verify:risk` covers Borrow and 1×–2.5× Multiply previews, the configured LTV
 buffer, oracle precision, ETH/USDC unit parsing, and slippage bounds.
+
+Wallet discovery first queries `supportedWalletApi` and the network. It does
+not request an account from unsupported/non-Mainnet wallets, call shielded
+balances, or expose a submit method through GhostLoop's connected-wallet
+boundary. The currently wired boundary can only call
+`strk20PrepareInvoke(actions, true)`.
 
 `preflight:vesu` is a deployment gate and exits non-zero when the current
 Prime ETH/USDC cap cannot support a position above Vesu's debt floor. That is

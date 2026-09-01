@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import {
@@ -23,6 +24,18 @@ export type MarketView = {
 type Mode = "borrow" | "multiply";
 
 const leveragePresets = [1.5, 2, 2.5] as const;
+
+const WalletConnector = dynamic(
+  () => import("@/components/wallet-connector").then((module) => module.WalletConnector),
+  {
+    ssr: false,
+    loading: () => (
+      <button className="walletButton" type="button" disabled>
+        Loading wallet discovery…
+      </button>
+    ),
+  },
+);
 
 function numberValue(value: string): number {
   const parsed = Number(value);
@@ -163,9 +176,7 @@ export function GhostLoopDashboard({ market }: { market: MarketView | null }) {
           <span className="networkPill">
             <span aria-hidden="true" /> Starknet Mainnet
           </span>
-          <button className="walletButton" type="button" disabled>
-            Wallet integration pending
-          </button>
+          <WalletConnector />
         </div>
       </header>
 
