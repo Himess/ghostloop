@@ -61,11 +61,14 @@ declared Stark public key before accepting the record. Wrong passwords,
 tampering, duplicate references, oversized/unknown envelopes, signing while
 locked, and missing records are rejected. There is no backend recovery.
 
-The UI must require an explicit encrypted backup and warn that losing either
-the backup/passphrase or browser storage can make repayment and unwind
-impossible. JavaScript cannot guarantee immediate erasure of immutable strings
-or engine-internal cryptographic state, so this is an experimental browser
-custody boundary rather than hardware-wallet-grade storage.
+The UI now requires a 12+ character passphrase, explicit loss acknowledgement,
+encrypted-backup download, and confirmation that the backup and passphrase were
+stored separately before the key is marked ready for position creation. It
+warns that forgetting the passphrase, or losing both browser storage and the
+backup, can make repayment and unwind impossible. JavaScript cannot guarantee
+immediate erasure of immutable strings or engine-internal cryptographic state,
+so this is an experimental browser custody boundary rather than
+hardware-wallet-grade storage.
 
 ## Deployment gates
 

@@ -304,6 +304,28 @@ from assumptions. Times are recorded in UTC.
   submission. The live prepare proof remains gated on a reviewed deployed
   helper and compatible wallet.
 
+## 2026-09-01 — Encrypted backup ceremony gates position readiness
+
+- **Time:** 2026-09-01T10:04:58Z
+- **Source:** GhostLoop `WebCryptoPositionKeyStore`, browser IndexedDB/Blob
+  primitives, the deterministic key-store verifier, the backup-policy verifier,
+  and the Next.js production compiler.
+- **Finding:** The dashboard now presents the recovery warning before position
+  creation. A user must choose and confirm a 12+ character passphrase,
+  acknowledge that GhostLoop cannot recover it, generate the capability key
+  locally, explicitly download the authenticated encrypted envelope, and then
+  confirm separate storage. Only all three states — key created, download
+  started, storage acknowledged — expose the public reference/key metadata to
+  the parent readiness gate. The passphrase fields are cleared and the key
+  store is locked immediately after export; no backend call is involved.
+- **Confidence:** High for the cryptographic storage behavior and deterministic
+  readiness state machine. The browser UI compiles in production, but download
+  behavior still needs interactive extension/browser QA on the final target
+  browser before launch.
+- **Impact:** Position creation can no longer become enabled merely because a
+  key exists in IndexedDB. The user must complete and explicitly acknowledge
+  the recovery workflow first.
+
 ## Research queue
 
 - Execute a real `strk20PrepareInvoke(..., true)` dry-run with a supporting

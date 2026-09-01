@@ -8,6 +8,7 @@ import {
   calculateMultiplyRisk,
   DEFAULT_RISK_BUFFER,
 } from "@/src/risk/position-risk";
+import type { PreparedPositionKeyMetadata } from "@/src/security/key-backup-policy";
 
 export type MarketView = {
   blockNumber: number;
@@ -34,6 +35,14 @@ const WalletConnector = dynamic(
         Loading wallet discovery…
       </button>
     ),
+  },
+);
+
+const PositionKeySetup = dynamic(
+  () => import("@/components/position-key-setup").then((module) => module.PositionKeySetup),
+  {
+    ssr: false,
+    loading: () => <div className="keySetupLoading">Loading local recovery controls…</div>,
   },
 );
 
@@ -129,6 +138,9 @@ export function GhostLoopDashboard({ market }: { market: MarketView | null }) {
   const [multiplyDeposit, setMultiplyDeposit] = useState("0.02");
   const [leverage, setLeverage] = useState<(typeof leveragePresets)[number]>(2);
   const [slippage, setSlippage] = useState("0.50");
+  const [preparedPositionKey, setPreparedPositionKey] =
+    useState<PreparedPositionKeyMetadata | null>(null);
+  const keyBackupReady = preparedPositionKey !== null;
 
   const marketReady = Boolean(market?.liveBorrowViable && market.oracleValid);
   const ethPrice = market?.ethPriceUsdc ?? 0;
@@ -166,6 +178,8 @@ export function GhostLoopDashboard({ market }: { market: MarketView | null }) {
       ? "Execution paused by market gate"
       : !inputSafe
         ? "Position exceeds safety buffer"
+        : !keyBackupReady
+          ? "Complete encrypted key backup"
         : "Connect privacy wallet to continue";
 
   return (
@@ -396,6 +410,8 @@ export function GhostLoopDashboard({ market }: { market: MarketView | null }) {
         </aside>
       </section>
 
+      <PositionKeySetup onReadyChange={setPreparedPositionKey} />
+
       <section className="positionPanel" aria-labelledby="position-title">
         <div className="positionHeading">
           <div><span className="eyebrow"><span /> POSITION</span><h2 id="position-title">Your GhostPosition</h2></div>
@@ -405,7 +421,11 @@ export function GhostLoopDashboard({ market }: { market: MarketView | null }) {
           <div className="emptyGlyph" aria-hidden="true"><span /><span /></div>
           <div>
             <strong>No position exists in this browser.</strong>
-            <p>A position appears only after encrypted key backup, live preflight, wallet prepare simulation, and user approval all succeed.</p>
+            <p>
+              {keyBackupReady
+                ? "Encrypted key backup is ready. Live preflight, wallet prepare simulation, and user approval are still required."
+                : "A position appears only after encrypted key backup, live preflight, wallet prepare simulation, and user approval all succeed."}
+            </p>
           </div>
           <div className="positionActions">
             <button type="button" disabled>Repay</button>

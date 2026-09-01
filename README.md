@@ -12,10 +12,11 @@ Multiply and unwind flows.
 
 > Status: Option B contracts, Wallet API serialization, encrypted capability
 > keys, the live-data position dashboard, and fail-closed privacy-wallet
-> capability detection are implemented. Contract lifecycles are fork-proven.
-> Live deployment remains gated by Vesu market capacity, independent review,
-> and a connected-wallet prepare dry-run. No deployment, demo URL, contract
-> address, or transaction hash is claimed yet.
+> capability detection are implemented. The UI also requires a locally
+> encrypted key, downloaded backup, and explicit recovery acknowledgement.
+> Contract lifecycles are fork-proven. Live deployment remains gated by Vesu
+> market capacity, independent review, and a connected-wallet prepare dry-run.
+> No deployment, demo URL, contract address, or transaction hash is claimed yet.
 
 ## Product flows
 
@@ -55,6 +56,9 @@ The first milestone is evidence, not UI polish:
 8. ~~Add privacy-wallet capability detection and a prepare-only boundary.~~
    Discovery requires Wallet API `0.10.3+` on Mainnet before account access;
    the narrowed connection can simulate but cannot submit a transaction.
+9. ~~Require the encrypted capability-key backup ceremony.~~ A future position
+   key is generated and encrypted locally; creation readiness requires a backup
+   download plus explicit acknowledgement that GhostLoop has no recovery path.
 
 Research is recorded in [docs/RESEARCH_LOG.md](docs/RESEARCH_LOG.md), and
 architectural decisions in [docs/DECISIONS.md](docs/DECISIONS.md).
@@ -72,6 +76,7 @@ npm run verify:contract-abi
 npm run verify:wallet-actions
 npm run verify:wallet-capability
 npm run verify:key-store
+npm run verify:key-backup
 npm run verify:risk
 npm run verify:addresses
 npm run preflight:vesu

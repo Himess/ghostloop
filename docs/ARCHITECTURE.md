@@ -170,8 +170,9 @@ not depend on GhostPosition deployment or capability-key details.
   gate.~~
 - ~~Wallet discovery, `0.10.3+`/Mainnet capability gates, and a prepare-only
   simulation boundary.~~
+- ~~Capability-key passphrase, encrypted download, and irreversible-loss
+  acknowledgement in the UI.~~
 - Connected-wallet `strk20PrepareInvoke(actions, true)` simulation against a
   deployed reviewed helper.
-- Capability-key backup and irreversible-loss warnings in the UI.
 
 These items are tracked in [RESEARCH_LOG.md](RESEARCH_LOG.md).

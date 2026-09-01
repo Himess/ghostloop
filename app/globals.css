@@ -1062,6 +1062,245 @@ a {
   padding: 25px 28px;
 }
 
+.keySetupPanel,
+.keySetupLoading {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(200, 255, 98, 0.07), transparent 35%),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.keySetupPanel {
+  padding: 25px 28px;
+}
+
+.keySetupLoading {
+  min-height: 110px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.keySetupHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.keySetupHeading .eyebrow {
+  margin-bottom: 8px;
+}
+
+.keySetupHeading h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.keyGateStatus {
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 189, 102, 0.25);
+  border-radius: 999px;
+  color: var(--danger);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.keyGateStatus.ready {
+  color: var(--lime);
+  border-color: rgba(200, 255, 98, 0.3);
+  background: var(--lime-soft);
+}
+
+.keyWarning {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid rgba(255, 189, 102, 0.18);
+  border-radius: 12px;
+  background: var(--danger-soft);
+}
+
+.keyWarning > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 189, 102, 0.34);
+  border-radius: 50%;
+  color: var(--danger);
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.keyWarning strong {
+  font-size: 11px;
+}
+
+.keyWarning p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.keySetupGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.keySetupGrid > label:not(.keyCheckbox) {
+  display: grid;
+  gap: 7px;
+  color: #c9ced7;
+  font-size: 10px;
+}
+
+.keySetupGrid input[type="password"] {
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  padding: 0 13px;
+}
+
+.keyCheckbox {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.keyCheckbox input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--lime);
+}
+
+.keyCreateButton,
+.keyDownload {
+  min-height: 43px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: var(--lime);
+  color: #11150d;
+  padding: 0 16px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.keyCreateButton:disabled {
+  background: #292e34;
+  color: #777f8a;
+  cursor: not-allowed;
+}
+
+.keyFieldHint {
+  align-self: center;
+  margin: 0;
+  color: var(--danger);
+  font-size: 9px;
+}
+
+.keyBackupResult {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px 18px;
+}
+
+.keyIdentity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.keyGlyph {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(200, 255, 98, 0.28);
+  border-radius: 10px;
+  background: var(--lime-soft);
+  color: var(--lime);
+}
+
+.keyIdentity strong,
+.keyIdentity code,
+.keyIdentity small {
+  display: block;
+}
+
+.keyIdentity strong {
+  font-size: 11px;
+}
+
+.keyIdentity code {
+  margin-top: 4px;
+  color: var(--lime);
+  font-size: 10px;
+}
+
+.keyIdentity small {
+  overflow: hidden;
+  margin-top: 4px;
+  color: var(--muted-2);
+  font-size: 8px;
+  text-overflow: ellipsis;
+}
+
+.keyBackupResult .finalCheck {
+  grid-column: 1 / -1;
+}
+
+.keySetupMessage,
+.keyCustodyNote {
+  margin: 13px 0 0;
+  color: var(--muted-2);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.keySetupMessage {
+  color: var(--danger);
+}
+
+.keySetupMessage.success {
+  color: var(--lime);
+}
+
+.keyCustodyNote {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .positionHeading {
   display: flex;
   justify-content: space-between;
@@ -1282,6 +1521,25 @@ footer a:hover {
 
   .positionPanel {
     padding: 20px 17px;
+  }
+
+  .keySetupPanel {
+    padding: 20px 17px;
+  }
+
+  .keySetupHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .keySetupGrid,
+  .keyBackupResult {
+    grid-template-columns: 1fr;
+  }
+
+  .keySetupGrid > *,
+  .keyBackupResult .finalCheck {
+    grid-column: auto;
   }
 
   .emptyPosition {
