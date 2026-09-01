@@ -169,11 +169,35 @@ from assumptions. Times are recorded in UTC.
   gates are a real Wallet API `strk20PrepareInvoke(..., true)` dry-run and the
   Vesu Borrow/Repay/Close Mainnet-fork lifecycle.
 
+## 2026-09-01 — Canonical Vesu lifecycle passes; live ETH/USDC market is gated
+
+- **Time:** 2026-09-01T02:10+03:00
+- **Source:** Canonical Vesu Prime Mainnet contract, Vesu V2 source commit
+  `2165e6c01bc4c6386d7cc57ece6d13b3d8a3560f`, and GhostLoop's Starknet
+  Foundry `0.63.0` fork test.
+- **Finding:** Governance transaction
+  `0x7881366874d2627df382748a100346f6514856d0ea47fd0c4a22e6c0aad9a9f`
+  changed Prime's ETH/USDC debt cap in block `4172488`; the chain-reported cap
+  changed from `50000000000000000000000000` to `1000000`. At the immediately
+  preceding block `4172487`, GhostLoop opened a real 0.02 ETH / 20 USDC Vesu
+  position, partially repaid 5 USDC, fully closed the remaining debt, recovered
+  collateral and excess USDC, and consumed nonces 0–2. The test passed against
+  canonical Mainnet Vesu, ETH, and USDC contracts without broadcasting a
+  transaction. At live block `14175787`, the market has zero total nominal
+  debt, a 1 USDC cap, a 10e18 value floor, and a valid approximately 1e18 USDC
+  oracle price. The remaining cap value is below the strict debt floor.
+- **Confidence:** High — exact historical state transition, pinned archive
+  fork execution, current contract views, and upstream invariant source agree.
+- **Impact:** The GhostPosition Borrow/Repay/Close ABI and lifecycle are proven
+  against real Vesu behavior. Live deployment remains blocked until the
+  current-market preflight passes or a separately reviewed market decision is
+  made; the test does not justify silently switching pools.
+
 ## Research queue
 
 - Serialize each helper enum variant into Wallet API actions and execute a real
   `strk20PrepareInvoke(..., true)` dry-run with a supporting wallet.
-- Build Borrow and Multiply/unwind lifecycle proofs on a Mainnet fork.
+- Build the Multiply/unwind lifecycle proof on a Mainnet fork.
 - Verify canonical Multiply V2 and Ekubo calldata against the pinned deployment.
 - Implement encrypted client-side capability-key storage and recovery warnings.
 - Execute the native Shadow Account Wallet API probe if a newer Ready release

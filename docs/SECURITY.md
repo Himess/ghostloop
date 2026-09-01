@@ -48,7 +48,8 @@ No value-bearing Mainnet deployment until:
 
 1. authorization and replay tests pass;
 2. allowlist and settlement accounting tests pass;
-3. Borrow open/repay/close passes on a Mainnet fork;
+3. Borrow open/repay/close passes on a Mainnet fork and the current live market
+   preflight reports enough cap above Vesu's minimum-debt floor;
 4. Multiply increase/full unwind passes on a Mainnet fork;
 5. an independent contract review is completed; and
 6. the first deployment uses the smallest practical values.
@@ -74,6 +75,9 @@ No value-bearing Mainnet deployment until:
   if a non-zero debt refund was actually received.
 - The helper has no arbitrary-call entry point. Any ABI expansion fails CI.
 
-The local stateful settlement suite covers these invariants, but it is not a
-substitute for the required Vesu Mainnet-fork lifecycle test or an independent
-audit.
+The local stateful settlement suite covers these invariants. The canonical
+Vesu lifecycle also passes at pinned Mainnet block `4172487`, but the current
+Prime ETH/USDC cap is only 1 USDC while the debt floor is roughly 10 USDC.
+`npm run preflight:vesu` therefore blocks a live deployment. The historical
+fork proof is not evidence that today's market accepts a new position, and
+neither suite substitutes for an independent audit.

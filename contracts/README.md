@@ -29,7 +29,8 @@ Current checkpoint:
 - explicit rejection of zero output, negative delta, `u128` note overflow,
   position-reported/output-delta mismatch, missing notes, and unused refund
   notes;
-- 24 passing Linux contract tests;
+- 24 passing isolated Linux contract tests plus one ignored-by-default,
+  pinned-block Mainnet fork lifecycle test against canonical Vesu Prime;
 - no Multiply dispatch yet.
 
 Do not deploy until all gates in [`../docs/SECURITY.md`](../docs/SECURITY.md)
@@ -44,7 +45,14 @@ pass.
 ```bash
 scarb build
 snforge test
+snforge test test_vesu_mainnet_fork --ignored
 ```
+
+The fork test uses archive block `4172487`, immediately before the canonical
+Prime ETH/USDC market's debt cap was reduced. It opens a real 0.02 ETH / 20
+USDC position, partially repays it, closes it, verifies both assets are
+returned, and verifies the capability nonce sequence. The public archive RPC
+is read-only; all mutations live only inside Starknet Foundry's fork.
 
 On native Windows, Scarb builds locally; contract-state tests run in Linux CI
 because Starknet Foundry officially supports Windows through WSL.

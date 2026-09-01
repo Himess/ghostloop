@@ -25,3 +25,8 @@ sort-module-level-items = true
 
 [tool.snforge]
 exit_first = true
+
+[[tool.snforge.fork]]
+name = "MAINNET_VESU_ACTIVE"
+url = "https://api.cartridge.gg/x/starknet/mainnet"
+block_id.number = "4172487"

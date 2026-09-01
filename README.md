@@ -16,9 +16,9 @@ Multiply and unwind flows.
 
 ## Product flows
 
-- **Borrow:** private ETH → position Shadow Account → Vesu ETH/USDC position →
+- **Borrow:** private ETH → capability-bound GhostPosition → Vesu ETH/USDC position →
   borrowed USDC returned to a private STRK20 balance.
-- **Multiply:** private ETH → position Shadow Account → Vesu Multiply + Ekubo →
+- **Multiply:** private ETH → capability-bound GhostPosition → Vesu Multiply + Ekubo →
   persistent leveraged ETH position.
 - **Unwind:** Vesu Multiply closes debt and collateral → residual ETH returned
   to a private STRK20 balance.
@@ -39,8 +39,9 @@ The first milestone is evidence, not UI polish:
    dapp Wallet API support is not currently shipped; see the decision request.
 2. ~~Verify live STRK20 and Vesu ETH/USDC contracts and configuration.~~
 3. ~~Verify whether a canonical Vesu Multiply deployment exists.~~
-4. Implement the minimal signed GhostPosition authorization boundary.
-5. Prove borrow, Multiply, and full unwind on a Mainnet fork.
+4. ~~Implement the minimal signed GhostPosition authorization boundary.~~
+5. Prove borrow, Multiply, and full unwind on a Mainnet fork. Borrow/repay/close
+   now passes at pinned block `4172487`; Multiply/unwind remains.
 
 Research is recorded in [docs/RESEARCH_LOG.md](docs/RESEARCH_LOG.md), and
 architectural decisions in [docs/DECISIONS.md](docs/DECISIONS.md).
@@ -53,12 +54,17 @@ Node.js 22 or newer is required.
 npm install
 npm run check
 npm run verify:addresses
+npm run preflight:vesu
 npm run verify:tx -- <STARKNET_MAINNET_TX_HASH>
 npm run evidence
 ```
 
 `STARKNET_RPC_URL` may point to an authenticated Alchemy Mainnet endpoint. The
 read-only public sprint RPC is used when it is unset. Never commit API keys.
+
+`preflight:vesu` is a deployment gate and exits non-zero when the current
+Prime ETH/USDC cap cannot support a position above Vesu's debt floor. That is
+the expected live result while the market remains capped at 1 USDC.
 
 The transaction verifier requires both successful execution and receipt/trace
 evidence that the canonical STRK20 pool was touched. It does not treat an
