@@ -59,6 +59,7 @@ npm install
 npm run check
 npm run verify:contract-abi
 npm run verify:wallet-actions
+npm run verify:key-store
 npm run verify:addresses
 npm run preflight:vesu
 npm run verify:tx -- <STARKNET_MAINNET_TX_HASH>

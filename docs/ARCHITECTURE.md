@@ -137,8 +137,9 @@ not depend on GhostPosition deployment or capability-key details.
 - ~~Exact canonical Multiply increase/full-unwind calldata on a Mainnet fork.~~
 - ~~STRK20 input accounting and open-note output settlement.~~
 - ~~Exact Wallet API action and helper calldata serialization.~~
+- ~~Encrypted per-position capability keys and authenticated backup/import.~~
 - Connected-wallet `strk20PrepareInvoke(actions, true)` simulation against a
   deployed reviewed helper.
-- Encrypted IndexedDB capability-key storage, backup, and loss warnings.
+- Capability-key backup and irreversible-loss warnings in the UI.
 
 These items are tracked in [RESEARCH_LOG.md](RESEARCH_LOG.md).

@@ -37,10 +37,35 @@ Required negative tests:
 
 ## Key storage
 
-The MVP will use a fresh key per position, encrypted client-side with WebCrypto
-before persistence in IndexedDB. There is no backend recovery. Export/backup
-must be explicit and encrypted, and the UI must warn that losing a position key
-can make repayment or unwind impossible.
+The MVP uses a fresh Stark-curve key per position. `WebCryptoPositionKeyStore`
+encrypts the 32-byte private key with AES-256-GCM before persistence through
+`IndexedDbPositionKeyPersistence`. The AES key is non-extractable and derived
+only in memory from a user passphrase with PBKDF2-SHA-256, a random per-record
+128-bit salt, and 600,000 iterations. Each record uses a fresh 96-bit IV and
+authenticates its schema version, random reference, and capability public key.
+Decrypted byte arrays are cleared after signing; neither the passphrase nor raw
+private key is persisted.
+
+The PBKDF2 work factor matches the current
+[OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+recommendation for PBKDF2-HMAC-SHA-256. The 256-bit AES-GCM derivation and
+12-byte random IV use the browser primitives specified by
+[Web Cryptography Level 2](https://www.w3.org/TR/WebCryptoAPI/). Argon2id is
+memory-hard and preferable where a reviewed browser implementation is already
+available; GhostLoop currently avoids adding a separate key-derivation runtime
+to this narrow MVP.
+
+Encrypted export is the stored authenticated envelope itself. Import verifies
+the envelope, decrypts it, and proves the recovered private key matches the
+declared Stark public key before accepting the record. Wrong passwords,
+tampering, duplicate references, oversized/unknown envelopes, signing while
+locked, and missing records are rejected. There is no backend recovery.
+
+The UI must require an explicit encrypted backup and warn that losing either
+the backup/passphrase or browser storage can make repayment and unwind
+impossible. JavaScript cannot guarantee immediate erasure of immutable strings
+or engine-internal cryptographic state, so this is an experimental browser
+custody boundary rather than hardware-wallet-grade storage.
 
 ## Deployment gates
 

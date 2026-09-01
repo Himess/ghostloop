@@ -236,10 +236,31 @@ from assumptions. Times are recorded in UTC.
   A real `strk20PrepareInvoke(actions, true)` remains blocked until a reviewed
   helper is deployed and a compatible registered wallet is connected.
 
+## 2026-09-01 — Capability keys are encrypted before browser persistence
+
+- **Time:** 2026-09-01T02:02Z
+- **Source:** GhostLoop `WebCryptoPositionKeyStore`,
+  [Web Cryptography Level 2](https://www.w3.org/TR/WebCryptoAPI/), the current
+  [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html),
+  the browser IndexedDB API, and starknet.js `10.4.0` Stark-curve primitives.
+- **Finding:** A fresh private key is sealed with AES-256-GCM before the record
+  reaches IndexedDB. Its non-extractable encryption key is derived in memory
+  using PBKDF2-SHA-256, 600,000 iterations, and a random per-record 128-bit
+  salt; every record has a fresh 96-bit IV and authenticated metadata. The test
+  proves locked signing rejection, wrong-passphrase rejection, valid Stark
+  signature recovery, encrypted export/import, duplicate rejection, metadata
+  tamper detection, and deletion. Decrypted byte arrays are cleared after use.
+- **Confidence:** High for the implemented storage/encryption behavior in the
+  tested WebCrypto runtime. This is not an external security audit and browser
+  JavaScript cannot provide hardware-backed memory-erasure guarantees.
+- **Impact:** Raw capability keys no longer need to cross the persistence
+  boundary. The frontend must still implement explicit backup, passphrase, and
+  irreversible-loss warnings before it exposes position creation.
+
 ## Research queue
 
 - Execute a real `strk20PrepareInvoke(..., true)` dry-run with a supporting
   wallet after a reviewed helper deployment exists.
-- Implement encrypted client-side capability-key storage and recovery warnings.
+- Implement capability-key backup and irreversible-loss warnings in the UI.
 - Execute the native Shadow Account Wallet API probe if a newer Ready release
   advertises support.
