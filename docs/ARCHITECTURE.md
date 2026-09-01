@@ -122,6 +122,20 @@ returns `Span<OpenNoteDeposit>`. At most one output note per token is allowed.
 Multiply open may return an empty span; Borrow and unwind settle USDC or ETH to
 open notes.
 
+### Product dashboard and live data boundary
+
+The Next.js App Router page reads the Vesu Prime ETH/USDC snapshot on the
+server. Only a minimal serializable market view crosses into the interactive
+dashboard; RPC configuration and environment variables remain server-side.
+The client computes Borrow and Multiply previews from the current ETH oracle,
+max LTV, and a 10-percentage-point product buffer.
+
+The dashboard is deliberately fail-closed. Market viability, valid oracles,
+input safety, independent review, wallet compatibility, and capability-key
+backup must all pass before transaction preparation can be enabled. It shows
+which linkage is private and which position facts remain public, and it does
+not fabricate a wallet connection, position, quote, or transaction request.
+
 ## Native migration seam
 
 When a connected wallet advertises and successfully executes the Shadow Account
@@ -138,6 +152,8 @@ not depend on GhostPosition deployment or capability-key details.
 - ~~STRK20 input accounting and open-note output settlement.~~
 - ~~Exact Wallet API action and helper calldata serialization.~~
 - ~~Encrypted per-position capability keys and authenticated backup/import.~~
+- ~~Live Vesu-backed Borrow/Multiply previews with a fail-closed execution
+  gate.~~
 - Connected-wallet `strk20PrepareInvoke(actions, true)` simulation against a
   deployed reviewed helper.
 - Capability-key backup and irreversible-loss warnings in the UI.

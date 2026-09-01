@@ -257,6 +257,28 @@ from assumptions. Times are recorded in UTC.
   boundary. The frontend must still implement explicit backup, passphrase, and
   irreversible-loss warnings before it exposes position creation.
 
+## 2026-09-01 — Live-data Borrow/Multiply dashboard passes browser QA
+
+- **Time:** 2026-09-01T09:45:53Z
+- **Source:** GhostLoop Next.js `16.3.4` application, Starknet Mainnet Vesu
+  Prime contract, deterministic risk verifier, and local browser checks at
+  desktop and 390×844 mobile viewports.
+- **Finding:** The server-rendered dashboard reads the current ETH and USDC
+  oracles and Prime ETH/USDC configuration, then passes a minimal market view
+  to an interactive Borrow/Multiply preview. Borrow risk, 1.5×–2.5× leverage,
+  health factor, liquidation price, token decimals, and slippage bounds are
+  covered by deterministic tests. Browser QA confirmed the 2.5× calculation,
+  the excessive-LTV warning, disabled market gate, accessible slippage input,
+  zero horizontal overflow at both viewports, and no console warnings or
+  errors. The live snapshot still reports only 1 USDC of capacity against an
+  approximately 10 USDC strict debt floor.
+- **Confidence:** High for rendering, risk-preview behavior, and fail-closed
+  gating. This is not a wallet simulation or a security audit.
+- **Impact:** Users can inspect honest live risk and product behavior without
+  any fake wallet or transaction state. Transaction preparation remains
+  disabled until the live market, review, compatible-wallet, and key-backup
+  gates all pass.
+
 ## Research queue
 
 - Execute a real `strk20PrepareInvoke(..., true)` dry-run with a supporting

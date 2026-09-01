@@ -9,20 +9,29 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "check": "tsc --noEmit",
     "verify:contract-abi": "tsx scripts/verify-contract-abi.ts",
     "verify:wallet-actions": "tsx scripts/verify-wallet-actions.ts",
     "verify:key-store": "tsx scripts/verify-position-key-store.ts",
+    "verify:risk": "tsx scripts/verify-position-risk.ts",
     "verify:addresses": "tsx scripts/verify-addresses.ts",
     "preflight:vesu": "tsx scripts/preflight-vesu-market.ts",
     "verify:tx": "tsx scripts/verify-mainnet-tx.ts",
     "evidence": "tsx scripts/export-mainnet-evidence.ts"
   },
   "dependencies": {
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "starknet": "10.4.0"
   },
   "devDependencies": {
     "@types/node": "24.10.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
     "tsx": "4.23.13",
     "typescript": "5.9.3"
   }

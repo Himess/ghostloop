@@ -10,10 +10,11 @@ STRK20 provides private balances and unlinkable execution identities. Vesu
 provides lending and risk management. Ekubo provides swap liquidity for
 Multiply and unwind flows.
 
-> Status: Option B contracts and Wallet API serialization are implemented and
-> fork-proven. Live deployment remains gated by Vesu market capacity,
-> independent review, and a connected-wallet prepare dry-run. No deployment,
-> demo URL, contract address, or transaction hash is claimed yet.
+> Status: Option B contracts, Wallet API serialization, encrypted capability
+> keys, and the live-data position dashboard are implemented. Contract
+> lifecycles are fork-proven. Live deployment remains gated by Vesu market
+> capacity, independent review, and a connected-wallet prepare dry-run. No
+> deployment, demo URL, contract address, or transaction hash is claimed yet.
 
 ## Product flows
 
@@ -46,6 +47,10 @@ The first milestone is evidence, not UI polish:
 6. ~~Serialize every closed helper operation as exact STRK20 Wallet API
    actions.~~ The six builders match starknet.js compilation of the generated
    Cairo ABI, including open-note placeholders and integer limbs.
+7. ~~Build the Borrow/Multiply preview against live Vesu risk data.~~ The
+   dashboard renders current oracle and market state server-side, applies a
+   10-point LTV buffer, and keeps every execution control disabled while a
+   required safety gate is incomplete.
 
 Research is recorded in [docs/RESEARCH_LOG.md](docs/RESEARCH_LOG.md), and
 architectural decisions in [docs/DECISIONS.md](docs/DECISIONS.md).
@@ -56,10 +61,13 @@ Node.js 22 or newer is required.
 
 ```bash
 npm install
+npm run dev
 npm run check
+npm run build
 npm run verify:contract-abi
 npm run verify:wallet-actions
 npm run verify:key-store
+npm run verify:risk
 npm run verify:addresses
 npm run preflight:vesu
 npm run verify:tx -- <STARKNET_MAINNET_TX_HASH>
@@ -73,6 +81,9 @@ The ABI and Wallet API serialization verifiers consume Scarb artifacts under
 `contracts/target/dev`; run `scarb build` in `contracts/` first after a clean
 checkout. Serialization verification is offline and does not submit a wallet
 request or transaction.
+
+`verify:risk` covers Borrow and 1×–2.5× Multiply previews, the configured LTV
+buffer, oracle precision, ETH/USDC unit parsing, and slippage bounds.
 
 `preflight:vesu` is a deployment gate and exits non-zero when the current
 Prime ETH/USDC cap cannot support a position above Vesu's debt floor. That is

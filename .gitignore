@@ -19,6 +19,7 @@ target/
 
 # Logs and OS files
 *.log
+*.tsbuildinfo
 .DS_Store
 Thumbs.db
 
